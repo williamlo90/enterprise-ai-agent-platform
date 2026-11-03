@@ -1,6 +1,6 @@
 # Arsitektur backend
 
-Status: rancangan implementasi bertahap. BE-01/02 menyediakan bootstrap API/config dan HTTP boundary; BE-03 memasang composition/service/port health. DB-01 menambahkan adapter koneksi/transaksi PostgreSQL dan probe opt-in; pengujian DB nyata dan QA independen lulus. Komponen bisnis, schema/RLS, worker dan service referensi belum diimplementasikan. Acuan: [kontrak produk](../../PRODUCT_CONTRACT.md), [arsitektur sistem](../../ARCHITECTURE.md), [kontrak data/API](../../DATA_AND_API_CONTRACTS.md), [test plan](../../TEST_PLAN.md). Dokumen pendamping: [database schema](database_schema.md) dan [task plan](task_plan.md).
+Status: rancangan implementasi bertahap. BE-01/02 menyediakan bootstrap API/config dan HTTP boundary; BE-03 memasang composition/service/port health. DB-01 menambahkan adapter koneksi/transaksi PostgreSQL dan probe opt-in; pengujian DB nyata dan QA independen lulus. DB-02 migration runner dan identity/config foundation schema sudah terpasang pada revision 0002 dan lulus QA. Komponen bisnis, RLS, worker dan service referensi belum diimplementasikan. Acuan: [kontrak produk](../../PRODUCT_CONTRACT.md), [arsitektur sistem](../../ARCHITECTURE.md), [kontrak data/API](../../DATA_AND_API_CONTRACTS.md), [test plan](../../TEST_PLAN.md). Dokumen pendamping: [database schema](database_schema.md) dan [task plan](task_plan.md).
 
 ## 1. Unit executable dan tanggung jawab
 

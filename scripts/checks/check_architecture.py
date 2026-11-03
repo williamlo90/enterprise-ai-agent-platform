@@ -9,7 +9,7 @@ PACKAGES = (
     ("backend/src", "enterprise_ai_platform"),
     ("reference_service/src", "reimbursement_service"),
 )
-ROOT_FILES = {"main", "worker", "composition", "database_check", "__main__"}
+ROOT_FILES = {"main", "worker", "composition", "database_check", "migration_cli", "__main__"}
 PUBLIC = {"service", "ports"}
 UNSAFE_NAMES = {"__import__", "__builtins__", "eval", "exec"}
 DATABASE_STDLIB = {"sqlite3", "_sqlite3", "dbm", "shelve"}
@@ -34,6 +34,8 @@ def imports(node: ast.AST, module: tuple[str, ...], is_package: bool):
 def violation(source: tuple[str, ...], target: str, package: str) -> str | None:
     parts = target.split(".")
     head = parts[0]
+    if target == "importlib.resources.files" and len(source) > 1 and source[1] == "infrastructure":
+        return None  # Static packaged SQL access, not dynamic Python import machinery.
     if head in {"builtins", "importlib"}:
         return "dynamic import machinery is not allowed in application source"
     if "*" in parts or head == "<relative-outside-package>":

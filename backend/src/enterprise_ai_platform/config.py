@@ -67,6 +67,11 @@ class DatabaseProbeSettings(Settings):
     database_direct_url: SecretStr = Field(validation_alias="DATABASE_DIRECT_URL", repr=False)
 
 
+class MigrationSettings(Settings):
+    # Migration needs only the direct URL, not the runtime credential.
+    database_direct_url: SecretStr = Field(validation_alias="DATABASE_DIRECT_URL", repr=False)
+
+
 def load_settings(
     env_file: Path | None = Path(".env"), *, require_file: bool = False,
     settings_type: type[Settings] = Settings,

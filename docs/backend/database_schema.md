@@ -1,6 +1,6 @@
 # Database schema
 
-Status: spesifikasi schema PostgreSQL untuk diturunkan menjadi migration. Belum ada database atau migration executable dibuat. Acuan [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), [backend architecture](architecture.md), dan [task plan](task_plan.md). Schema ini memperinci model logis, bukan mengganti pemilik data atau scope produk.
+Status: spesifikasi schema PostgreSQL. DB-01 koneksi telah lulus QA; DB-02 foundation migration 0001/0002 sudah terpasang dan lulus QA kode, wheel dan database nyata. Tabel fitur setelah identity/config masih rancangan. Acuan [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), [backend architecture](architecture.md), dan [task plan](task_plan.md). Schema ini memperinci model logis, bukan mengganti pemilik data atau scope produk.
 
 ## 1. Konvensi dan jenis relasi
 
@@ -27,6 +27,14 @@ Relasi dasar: tenant 1:N membership/documents/conversations/policy versions; pri
 Actor global/system pada audit menggunakan kind serta reference terkontrol. Role operator provisioning tidak dicampur menjadi keanggotaan berhak baca semua tenant. Tenant admin dan process owner berbeda privilege; constraint DB bukan satu-satunya enforcement grant sensitivity.
 
 FK pointer `(tenants.id,tenants.config_version)`→`tenant_configs(tenant_id,config_version)` bersifat **DEFERRABLE INITIALLY DEFERRED**. Header tenant dan snapshot config awal dibuat dalam satu transaksi sehingga pemeriksaan pointer dilakukan pada commit; FK child tenant_configs→tenants tetap menjaga parent. DB-02 wajib menguji insert awal yang sah serta commit dengan snapshot hilang atau milik tenant lain yang ditolak. Menambahkan FK setelah tabel tersedia saja tidak menyelesaikan circular insert.
+
+### Implementasi foundation DB-02
+
+Objek fondasi berada di schema `platform`; SQL executable dikemas pada `backend/src/enterprise_ai_platform/infrastructure/database/migrations/`. Revision 0001 membuat tujuh tabel di bagian 2 serta `timezone_catalog`; revision 0002 menambah indeks workload. Ledger `schema_migrations` terpisah dari data bisnis. CLI dan aturan revision pada [backend README](../../backend/README.md#migration-dan-foundation-schema-db-02).
+
+Timezone catalog versi 1 berisi Asia/Jakarta, Asia/Singapore, UTC dan direferensikan oleh tenants. `principals`, `tenants` dan `sessions` juga menyimpan version/updated_at untuk konsistensi konvensi mutable. Issuer dan subject dibatasi masing-masing 2048/512 byte agar unique index tetap sah. Token/CSRF hash belum mengunci algoritme; policy AUTH-01 melengkapinya. Role scope belum memberi izin hanya karena tersimpan; semantic allowlist dan anti-self-escalation mengikuti AUTH-03.
+
+Snapshot tenant/security policy immutable melalui trigger UPDATE/DELETE/TRUNCATE; perubahan membuat snapshot baru. Locale JSONB hanya id/en (satu atau keduanya, tanpa duplikat), config schema_version=1. Security processing_policy harus object dengan schema_version=1; category/region/semantik JSON, activation dan data policy lengkap mengikuti DATA-01. Approval metadata berpasangan dan memerlukan retention positif serta region, namun bukan bukti activation atau kepatuhan. Index principal/active membership, grantor, sessions principal/revoked/expiry dan active tenant tersedia. DB-03 menambah least privilege/context/RLS; FK tenant saja belum membuktikan isolasi akses.
 
 ## 3. Platform — file dan knowledge
 

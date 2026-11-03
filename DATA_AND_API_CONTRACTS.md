@@ -1,6 +1,6 @@
 # Data and API Contracts — Enterprise AI Agent Platform
 
-Status: kontrak desain untuk implementasi; belum schema migration atau hasil pengujian. Turunan [PRODUCT_CONTRACT.md](PRODUCT_CONTRACT.md) §3–6; komponen pada [ARCHITECTURE.md](ARCHITECTURE.md), kasus uji pada [TEST_PLAN.md](TEST_PLAN.md). Aturan produk mengungguli detail teknis; perubahan perilaku produk memerlukan penyelarasan keempat file.
+Status: kontrak desain. Fondasi koneksi DB-01 telah lulus QA; implementasi migration identity/config DB-02 dan status verifikasinya dicatat pada docs/backend/task_plan.md. API/fitur lain tetap rancangan sampai tugas terkait diterima. Turunan [PRODUCT_CONTRACT.md](PRODUCT_CONTRACT.md) §3–6; komponen pada [ARCHITECTURE.md](ARCHITECTURE.md), kasus uji pada [TEST_PLAN.md](TEST_PLAN.md). Aturan produk mengungguli detail teknis; perubahan perilaku produk memerlukan penyelarasan keempat file.
 
 ## 1. Konvensi dan invariant
 

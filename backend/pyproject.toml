@@ -17,6 +17,7 @@ dependencies = [
 [project.scripts]
 enterprise-ai-api = "enterprise_ai_platform.main:main"
 enterprise-ai-db-check = "enterprise_ai_platform.database_check:main"
+enterprise-ai-migrate = "enterprise_ai_platform.migration_cli:main"
 
 [dependency-groups]
 dev = [

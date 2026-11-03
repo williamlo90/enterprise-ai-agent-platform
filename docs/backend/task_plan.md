@@ -1,10 +1,10 @@
 # Backend task plan
 
-Status: **BE-01, BE-02, BE-03, dan DB-01 selesai dan lulus QA — 3 November 2026**. Tugas berikutnya **belum mulai**. Skeleton dan dokumen bukan bukti bahwa fitur lain dalam tabel telah selesai. Acuan [backend architecture](architecture.md), [database schema](database_schema.md), [PRODUCT_CONTRACT.md](../../PRODUCT_CONTRACT.md), [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), dan [TEST_PLAN.md](../../TEST_PLAN.md).
+Status: **BE-01, BE-02, BE-03, DB-01, dan DB-02 selesai dan lulus QA — 3 November 2026**. Tugas berikutnya **belum mulai**. Skeleton dan dokumen bukan bukti bahwa fitur lain dalam tabel telah selesai. Acuan [backend architecture](architecture.md), [database schema](database_schema.md), [PRODUCT_CONTRACT.md](../../PRODUCT_CONTRACT.md), [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), dan [TEST_PLAN.md](../../TEST_PLAN.md).
 
 ## 1. Cara menggunakan rencana
 
-**DB-01 selesai:** audit offline dan uji database nyata lulus, termasuk reproduksi independen QA. DB-02/03 belum dimulai.
+**DB-01 selesai:** audit offline dan uji database nyata lulus, termasuk reproduksi independen QA. **DB-02 juga selesai dan terpasang pada revision 0002; DB-03 belum dimulai.**
 
 Setiap tugas mempunyai ID, prasyarat, hasil yang dapat diperiksa dan bukti. Status: belum mulai → dikerjakan → menunggu review → selesai; terhambat hanya jika ada ketergantungan nyata. Implementasi ditutup setelah checks relevan, temuan QA material dan recheck, dokumentasi sesuai hasil aktual, serta diff/secret review. Commit/push mengikuti cakupan kerja yang diotorisasi; tidak menambahkan resource berbayar atau membaca secret ke chat.
 
@@ -171,3 +171,17 @@ Berikutnya **DB-01: konfigurasi koneksi runtime/migration dan pengujian transaks
 - Batas bukti: kelulusan koneksi dan transaksi DB-01. Belum ada schema bisnis, migration framework, actor/tenant context, role least-privilege atau RLS; DB-02/03 tetap belum mulai. Tidak mengklaim performance, availability, atau security seluruh produk.
 
 Berikutnya **DB-02: migration framework dan foundation schema**, sesuai prasyarat tabel.
+
+## 15. Hasil pelaksanaan DB-02
+
+**Selesai, terpasang dan lulus QA — 3 November 2026.** Migration runner SQL berversi dan foundation identity/config tersedia dari package/wheel; schema aplikasi `platform` sudah berada pada revision **0002/head 0002**.
+
+- Revision 0001 membuat principals, tenants, memberships, membership_roles, sessions, tenant_configs, security_policy_configs serta timezone_catalog. Revision 0002 menambah tujuh indeks. Ledger revision/name/SHA256 menyertai batch atomik; direct credential tidak dimuat ke resource API.
+- Runner mengunci namespace sebelum inspeksi/mutasi, memverifikasi exact history prefix, menolak schema tanpa ledger maupun ledger existing kosong, dan menggagalkan race namespace dengan CREATE tanpa IF NOT EXISTS. Tidak ada stamping/downgrade atau migration otomatis pada API startup.
+- **166 tes lulus, termasuk 2 tes integrasi live** (DB-01 dan DB-02). Pemeriksaan migration live mencakup **40 checks di dalam probe**, bukan 40 test tambahan: status read-only, empty/previous-filled→head, replay/concurrent upgrade, rollback initial/upgrade gagal, history drift/unmanaged schema, tenant FK/unique/null/version, session membership, deferred tenant config pointer, locale/schema checks, immutable UPDATE/DELETE/TRUNCATE, serta cleanup seluruh schema uji.
+- Clean staged-file export tanpa .env/virtualenv pengguna berhasil locked dependency install, sdist/wheel build, SQL resources di wheel, non-editable import dari site-packages, guard arsitektur dan console check. **164 tes offline lulus, 2 live tests skipped** pada clean export; CLI dari wheel yang sama meluluskan **40 checks live** dengan credential dimuat internal dari lokasi lokal asli, tanpa disalin ke export.
+- **QA independen lulus setelah perbaikan material dan recheck.** QA mereproduksi 166 tes, clean wheel/offline suite, 40 checks live, dan memastikan unknown schema/empty ledger ditolak tanpa mengubah data asing. Seluruh temuan material tertutup.
+- Setelah audit, Main menerapkan upgrade aplikasi dari 0000 ke 0002 dan memverifikasi replay no-op. **QA read-only memverifikasi pemasangan actual**: 8 tabel fondasi + ledger, tujuh indeks revision 0002, deferred pointer, tiga timezone allowlist, tanpa seed tenant/principal/config. Credential tidak ditampilkan atau masuk Git. Hasil tersanitasi lokal di local/db02-last-verification.txt, local/db02-clean-verification.txt dan local/db02-deployment-verification.txt diabaikan Git.
+- Batas scope: FK/constraint bukan kontrol akses. Runtime least privilege, actor/tenant transaction context dan RLS adalah DB-03; semantic scope/sensitivity/hash/session enforcement mengikuti AUTH, dan aktivasi/validasi security policy lengkap mengikuti DATA-01. Belum ada login, data bisnis, RAG atau workflow executable.
+
+Berikutnya **DB-03: runtime least privilege, transaction-local actor/tenant dan RLS**, dengan pengujian database nyata pada success/error/cancel/timeout reuse.

@@ -1,6 +1,6 @@
 # Backend platform
 
-BE-01 menyediakan paket FastAPI yang dapat diinstal dan dijalankan. BE-02 menambahkan health/readiness bootstrap, error envelope, request ID dan batas input. BE-03 memasang composition root, health service/ports dan dependency wiring. DB-01 menyediakan koneksi PostgreSQL opsional dan telah lulus tes offline/live serta QA independen. Belum ada schema bisnis, RLS, autentikasi, RAG, worker, atau endpoint reimbursement.
+BE-01 menyediakan paket FastAPI yang dapat diinstal dan dijalankan. BE-02 menambahkan health/readiness bootstrap, error envelope, request ID dan batas input. BE-03 memasang composition root, health service/ports dan dependency wiring. DB-01 menyediakan koneksi PostgreSQL opsional dan telah lulus tes offline/live serta QA independen. DB-02 menyediakan foundation identity/config migration yang sudah terpasang. Schema fitur bisnis, RLS, autentikasi, RAG, worker, dan endpoint reimbursement belum tersedia.
 
 ## Persiapan
 
@@ -76,7 +76,7 @@ BE-02 memperluas suite menjadi **58 tes lulus**, termasuk batas body/chunked, er
 
 Modul system memakai dataclass dan Protocol stdlib. Domain/ports tidak mengimpor transport, SDK, config atau DB; service menggunakan domain/ports dan public service/port modul lain. API hanya memakai transport serta public module service/port. Adapters memakai domain/ports dan tidak mengimpor route atau composition. Config terpisah dari application wiring. Reference service tidak mengimpor source platform, begitu pula sebaliknya.
 
-`scripts/checks/check_architecture.py` memeriksa import AST source aplikasi termasuk relative imports, package imports, cross-module private imports dan mekanisme dynamic import. Driver database stdlib (`sqlite3`, `_sqlite3`, `dbm`, `shelve`) ditolak pada API/domain/ports/service/config sebelum whitelist stdlib diterapkan; adapter tetap boleh memakainya. Importlib/builtins, wildcard import serta eval/exec/__import__ tidak diizinkan dalam source yang diperiksa. Guard merupakan regression check arsitektur, bukan sandbox atau bukti bahwa seluruh bentuk introspeksi Python mustahil. Perubahan layer/adapter memerlukan review aturan guard; tidak mematikan check untuk meloloskan dependency baru.
+`scripts/checks/check_architecture.py` memeriksa import AST source aplikasi termasuk relative imports, package imports, cross-module private imports dan mekanisme dynamic import. Driver database stdlib (`sqlite3`, `_sqlite3`, `dbm`, `shelve`) ditolak pada API/domain/ports/service/config sebelum whitelist stdlib diterapkan; adapter tetap boleh memakainya. Dynamic importlib/builtins, wildcard import serta eval/exec/__import__ tidak diizinkan. Pengecualian sempit `from importlib.resources import files` hanya pada infrastructure untuk membaca SQL paket; tidak membuka dynamic import. Guard merupakan regression check arsitektur, bukan sandbox atau bukti bahwa seluruh bentuk introspeksi Python mustahil. Perubahan layer/adapter memerlukan review aturan guard; tidak mematikan check untuk meloloskan dependency baru.
 
 Worker dan repository bisnis belum tersedia. DB-01 menambahkan lifecycle dan transaction context database; public service bisnis mengikuti task terkait.
 
@@ -123,3 +123,27 @@ Remove-Item Env:RUN_DATABASE_TESTS
 CLI API/probe memilih SelectorEventLoop pada Windows karena psycopg async tidak mendukung Proactor. Host ASGI lain harus menggunakan loop kompatibel. Liveness tetap process-only; readiness melakukan ping ketika DB aktif. Migration tidak berjalan otomatis pada startup API. Credential migration tidak menjadi resource runtime.
 
 Rujukan teknis: [psycopg async/Windows](https://www.psycopg.org/psycopg3/docs/advanced/async.html), [psycopg pool lifecycle](https://www.psycopg.org/psycopg3/docs/advanced/pool.html), dan [PostgreSQL TLS verification](https://www.postgresql.org/docs/current/libpq-ssl.html). TLS diperiksa pada koneksi client melalui libpq; statistik koneksi backend di balik pooler tidak dipakai sebagai bukti TLS client.
+
+## Migration dan foundation schema DB-02
+
+Status: **selesai dan lulus QA**, 166 tes termasuk dua integrasi live lulus; schema aplikasi pada revision 0002. Wheel bersih dan 40 pemeriksaan migration live juga lulus. Bukti pada [hasil DB-02](../docs/backend/task_plan.md#15-hasil-pelaksanaan-db-02). Migration tidak dijalankan saat API startup. Gunakan Python/uv terkunci dari root repository; command hanya memuat `DATABASE_DIRECT_URL` secara internal, tanpa membutuhkan runtime URL.
+
+```powershell
+python -m uv run --locked --project backend enterprise-ai-migrate status --env-file .env
+python -m uv run --locked --project backend enterprise-ai-migrate verify --env-file .env
+python -m uv run --locked --project backend enterprise-ai-migrate upgrade --env-file .env
+```
+
+- `status` read-only: memeriksa revision/checksum dan melaporkan current/head, tanpa membuat schema atau ledger.
+- `verify` menguji migration dan constraint pada schema acak `db02_probe_*` milik run tersebut, kemudian membersihkannya. Tidak menerapkan migration pada schema aplikasi. Pakai database pengujian khusus; kegagalan cleanup menggagalkan verifikasi.
+- `upgrade` menerapkan seluruh revision tertunda pada **schema `platform`**, melalui direct connection dengan TLS. Menjalankan ulang pada head tidak mengubah data. Tidak ada endpoint publik untuk menjalankan migration.
+
+Runner memakai SQL berversi di package `infrastructure/database/migrations`, bukan file SQL yang ditemukan dari working directory. Revision 0001 membuat principals, tenants, memberships, membership_roles, sessions, tenant_configs, security_policy_configs dan timezone_catalog; 0002 menambahkan indeks identity/session/grant. Ledger `platform.schema_migrations` menyimpan revision, nama, SHA256 dan waktu. Hash memakai SQL UTF-8 dengan newline LF agar source/wheel Windows/Linux konsisten.
+
+Upgrade mengambil advisory transaction lock sebelum membaca history atau membuat objek. Schema, seluruh pending DDL dan ledger commit bersama; SQL gagal membuat seluruh batch rollback. History harus menjadi prefix persis dari revision paket; checksum/nama/revision asing atau berlubang ditolak. Schema existing tanpa ledger atau dengan ledger kosong ditolak; tidak diadopsi otomatis. Bootstrap CREATE tanpa IF NOT EXISTS menggagalkan race pembuatan namespace asing. Lock timeout 5 detik, statement/idle timeout 20 detik, keseluruhan koneksi+pekerjaan 60 detik, serta commit/rollback/close dengan budget cleanup terpisah 5 detik. SQL revision merupakan kode admin yang direview; hanya transactional SQL, tanpa pengendalian transaksi sendiri. Jangan menunggu API/model di dalam migration.
+
+Timezone allowlist versi 1: `Asia/Jakarta`, `Asia/Singapore`, `UTC`, ditegakkan FK. Locale snapshot: `id`, `en`, atau keduanya tanpa duplikat. Config `schema_version=1`, nilai scalar penting dibatasi, dan snapshot menolak UPDATE/DELETE/TRUNCATE. Config baru dibuat sebagai snapshot baru lalu pointer tenant dipindahkan pada transaksi yang sama. FK pointer deferred menjaga initial tenant+snapshot sah, dan snapshot hilang/salah tenant ditolak saat commit. Identitas issuer/subject dibatasi byte agar unique index PostgreSQL tetap dapat menyimpan nilai yang sah.
+
+Role memiliki allowlist enam nilai kontrak. `scope_kind`/`scope_ref` sementara hanya penyimpanan bounded; vocabulary/otorisasi scope wajib dikunci sebelum AUTH-03. Scope tak dikenal tidak boleh memberi izin. Hash token/CSRF disimpan sebagai teks bounded, tanpa memilih algoritme/lifetime sebelum AUTH-01. Tabel security policy menyimpan snapshot/draft dan struktur dasar JSON; kategori, validasi semantik processing policy, residency/retention lengkap dan activation gate tetap DATA-01. Foreign key sesi membuktikan relasi membership, bukan membership masih aktif; login/expiry/revoke checks tetap tugas AUTH.
+
+**DB-02 belum meluluskan RLS, least privilege runtime, actor/tenant context, self-escalation rules, login atau fitur bisnis.** Itu DB-03/AUTH dan tugas fitur berikutnya. Jangan memakai schema fondasi untuk data sensitif sebelum kontrol tersebut selesai. Panduan menambah revision ada di [migration sources](migrations/README.md).

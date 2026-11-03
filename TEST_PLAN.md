@@ -1,6 +1,6 @@
 # Test Plan — Enterprise AI Agent Platform
 
-Status: rencana verifikasi; belum hasil tes. Acuan [PRODUCT_CONTRACT.md](PRODUCT_CONTRACT.md) §3–6, [ARCHITECTURE.md](ARCHITECTURE.md), dan [DATA_AND_API_CONTRACTS.md](DATA_AND_API_CONTRACTS.md). Audit dokumen tidak sama dengan pembuktian implementasi.
+Status: rencana verifikasi produk; hasil aktual tugas fondasi dicatat pada docs/backend/task_plan.md dan bukan kelulusan milestone produk. Acuan [PRODUCT_CONTRACT.md](PRODUCT_CONTRACT.md) §3–6, [ARCHITECTURE.md](ARCHITECTURE.md), dan [DATA_AND_API_CONTRACTS.md](DATA_AND_API_CONTRACTS.md). Audit dokumen tidak sama dengan pembuktian implementasi.
 
 ## 1. Strategi, milestone, dan gate
 

@@ -1,6 +1,6 @@
 # Repository layout
 
-Status: struktur repository telah direview QA. BE-01/02 menyediakan package API/config dan HTTP boundary; BE-03 menambahkan composition root, modul system health, runtime readiness adapter dan guard import. DB-01 menambahkan infrastructure/database/connection.py, infrastructure/database_probe.py dan CLI database_check.py; uji offline/live dan QA independen lulus. Folder fitur lain tetap menyiapkan implementasi. Belum ada fitur bisnis, migration, atau deployment executable.
+Status: struktur repository telah direview QA. BE-01/02 menyediakan package API/config dan HTTP boundary; BE-03 menambahkan composition root, modul system health, runtime readiness adapter dan guard import. DB-01 menambahkan infrastructure/database/connection.py, infrastructure/database_probe.py dan CLI database_check.py; uji offline/live dan QA independen lulus. Folder fitur lain tetap menyiapkan implementasi. DB-02 runner/SQL foundation migration sudah terpasang pada revision 0002 dan lulus QA. Fitur bisnis dan deployment belum executable.
 
 Empat dokumen kontrak tetap di root. Struktur mengikuti [ARCHITECTURE.md](../ARCHITECTURE.md) dan tidak mengubah scope produk.
 
@@ -53,7 +53,12 @@ enterprise-ai-agent-platform/
 │   │   └── infrastructure/
 │   │       ├── runtime.py
 │   │       ├── database/
-│   │       │   └── connection.py
+│   │       │   ├── connection.py
+│   │       │   ├── migration.py
+│   │       │   ├── migration_probe.py
+│   │       │   └── migrations/
+│   │       │       ├── 0001_foundation.sql
+│   │       │       └── 0002_foundation_indexes.sql
 │   │       ├── database_probe.py
 │   │       ├── checkpoints/
 │   │       ├── jobs/
@@ -141,3 +146,5 @@ enterprise-ai-agent-platform/
 ## Kelanjutan bootstrap
 
 Platform API mendapatkan manifest/lockfile, konfigurasi tervalidasi, entry point pada BE-01, HTTP boundary pada BE-02, dan composition/wiring health pada BE-03. Unit worker/reference service mengikuti task masing-masing. Secret menggunakan environment atau secret manager; `.env.example` berisi bootstrap/boundary settings tanpa credential. Struktur ini tidak otomatis mengizinkan pembuatan resource cloud atau pemakaian data sensitif.
+
+SQL migration executable berada di package agar ikut wheel; backend/migrations/README.md menjelaskan alur authoring. CLI migration_cli.py terpisah dari API startup.

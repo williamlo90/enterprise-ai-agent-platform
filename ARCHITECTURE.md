@@ -2,7 +2,7 @@
 
 Status: rancangan untuk implementasi, bukan bukti runtime. Acuan produk: [PRODUCT_CONTRACT.md](PRODUCT_CONTRACT.md), terutama bagian 3–6. Bentuk API/data dijabarkan pada [DATA_AND_API_CONTRACTS.md](DATA_AND_API_CONTRACTS.md); pembuktiannya pada [TEST_PLAN.md](TEST_PLAN.md).
 
-Perincian implementasi: [arsitektur backend](docs/backend/architecture.md), [schema database](docs/backend/database_schema.md), dan [task plan backend](docs/backend/task_plan.md). Ketiganya memperinci kontrak ini; belum menandai fitur atau migration selesai.
+Perincian implementasi: [arsitektur backend](docs/backend/architecture.md), [schema database](docs/backend/database_schema.md), dan [task plan backend](docs/backend/task_plan.md). Ketiganya memperinci kontrak ini; status implementasi, migration dan bukti QA dicatat per tugas pada task plan backend.
 
 ## 1. Tujuan dan keputusan utama
 

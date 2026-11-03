@@ -226,19 +226,26 @@ class RuntimeDatabase:
 
     @asynccontextmanager
     async def _bounded_transaction(self, connection):
-        transaction = connection.transaction()
-        await transaction.__aenter__()
-        try:
+        async with bounded_transaction(connection, cleanup_seconds=self.limits.cleanup_seconds):
             yield
-        except BaseException:
-            # The work deadline can already have fired. Rollback still needs
-            # a separate deadline, otherwise a stalled rollback can hang exit.
-            async with asyncio.timeout(self.limits.cleanup_seconds):
-                await transaction.__aexit__(*sys.exc_info())
-            raise
-        else:
-            async with asyncio.timeout(self.limits.cleanup_seconds):
-                await transaction.__aexit__(None, None, None)
+
+
+@asynccontextmanager
+async def bounded_transaction(connection, *, cleanup_seconds=5):
+    """Transaction exit is bounded separately from its caller's work deadline."""
+    transaction = connection.transaction()
+    await transaction.__aenter__()
+    try:
+        yield
+    except BaseException:
+        # The work deadline can already have fired. Rollback still needs
+        # a separate deadline, otherwise a stalled rollback can hang exit.
+        async with asyncio.timeout(cleanup_seconds):
+            await transaction.__aexit__(*sys.exc_info())
+        raise
+    else:
+        async with asyncio.timeout(cleanup_seconds):
+            await transaction.__aexit__(None, None, None)
 
 
 async def verify_tls(connection):
