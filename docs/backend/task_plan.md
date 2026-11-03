@@ -1,6 +1,6 @@
 # Backend task plan
 
-Status: rencana pekerjaan; seluruh tugas implementasi di bawah **belum mulai**. Skeleton dan dokumen yang sudah ada bukan bukti bahwa fitur dalam tabel telah selesai. Acuan [backend architecture](architecture.md), [database schema](database_schema.md), [PRODUCT_CONTRACT.md](../../PRODUCT_CONTRACT.md), [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), dan [TEST_PLAN.md](../../TEST_PLAN.md).
+Status: **BE-01 selesai dan lulus QA — 3 November 2026**. Tugas implementasi lain **belum mulai**. Skeleton dan dokumen bukan bukti bahwa fitur lain dalam tabel telah selesai. Acuan [backend architecture](architecture.md), [database schema](database_schema.md), [PRODUCT_CONTRACT.md](../../PRODUCT_CONTRACT.md), [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), dan [TEST_PLAN.md](../../TEST_PLAN.md).
 
 ## 1. Cara menggunakan rencana
 
@@ -8,7 +8,7 @@ Setiap tugas mempunyai ID, prasyarat, hasil yang dapat diperiksa dan bukti. Stat
 
 Feature tasks mencakup migration/constraint/index/RLS yang diperlukan, input/error contracts, integration tests, dan konfigurasi/run instructions yang relevan. Tidak menunggu akhir untuk menguji keamanan. Fitur dependent tidak diklaim lulus jika provider integration yang diperlukan masih mock/skipped. Spike memakai data fiktif dan safe temporary values; final acceptance thresholds dibekukan setelah calibration, bukan sebelum prototype.
 
-Tidak ada tes otomatis yang sudah dijalankan atau jumlah passed yang dijanjikan oleh task plan ini. Test families merujuk ID pada TEST_PLAN; per-case IDs dibuat saat implementasi dengan expected/actual dan evidence manifest.
+Test families merujuk ID pada TEST_PLAN; per-case IDs dibuat saat implementasi dengan expected/actual dan evidence manifest. Hasil aktual dicatat pada catatan pelaksanaan tugas; kriteria tabel merupakan target, bukan hasil tes.
 
 ## 2. Fondasi executable dan kelayakan
 
@@ -116,3 +116,15 @@ Eksperimen M4 tidak memerlukan seluruh M3 selesai bila environment inference dan
 Setiap penutupan mencatat ID/status, commit/config/dataset versions, test commands atau runner, hasil actual/expected, provider live vs stub/fault injection, sanitized artifacts, QA verdict dan limitation yang memengaruhi klaim. Tidak menambah riwayat eksperimen tak relevan ke README publik; raw hasil sensitif/local tetap diabaikan Git. Uji ulang terfokus setelah perubahan; tidak mengulang full suite tanpa alasan setelah checks relevan lulus.
 
 **Tugas implementasi pertama adalah BE-01.** Outputnya aplikasi backend minimal yang bisa diinstal/dinyalakan, dependency terkunci, config aman, dan panduan run. DB, login, RAG, workflow serta frontend belum diklaim tersedia pada BE-01. Setelah itu BE-02/BE-03 dan spike sesuai dependency.
+
+## 11. Hasil pelaksanaan BE-01
+
+**Selesai — 3 November 2026.** Package FastAPI, CLI `enterprise-ai-api`/module entry point, config APP_ENV/APP_HOST/APP_PORT, manifest/lockfile, `.env.example` tanpa credential, serta [panduan backend](../../backend/README.md) tersedia.
+
+- Windows, Python 3.13.6, uv 0.11.26; dependency terkunci termasuk FastAPI 0.162.0, Uvicorn 0.54.0, Pydantic 2.14.2, pydantic-settings 2.16.2. Versi lengkap dan hash pada backend/uv.lock.
+- **20 tes lulus**, termasuk validasi dan precedence config, error tanpa nilai input/path privat, app isolation, mode docs, CLI, dan startup HTTP aktual.
+- Salinan bersih file Git tanpa `.env`/virtualenv lokal berhasil melakukan locked dependency install, build sdist/wheel, install wheel non-editable, import dari site-packages, console config check, dan seluruh 20 tes.
+- **QA lulus tanpa temuan material**, mereproduksi suite, instalasi bersih, wheel, console, serta empat probe config sintetis tersanitasi secara independen. QA tidak membaca `.env` pengguna.
+- Batas bukti: bootstrap executable saja. Belum meluluskan DB, auth, health/readiness/error contracts BE-02, wiring BE-03, worker, model atau workflow bisnis. `/docs` dan `/openapi.json` hanya pada development; `/` serta endpoint bisnis masih 404.
+
+Berikutnya **BE-02**, sesuai dependency tabel. Provider spike boleh dijadwalkan terpisah setelah BE-01 tanpa mengklaim integrasi yang belum diuji.

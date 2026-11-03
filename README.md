@@ -6,7 +6,7 @@ The initial product combines a bilingual travel-policy assistant with reimbursem
 
 ## Project status
 
-Product and technical planning are documented and reviewed. The repository skeleton is in place; application implementation has not started.
+BE-01 is complete and QA-reviewed: an installable FastAPI backend bootstrap with validated configuration and 20 passing tests, including real HTTP startup and clean wheel installation. Business features are not implemented. See [backend setup](backend/README.md).
 
 ## Planned MVP
 
@@ -46,7 +46,7 @@ docs/               Layout, decisions, and runbooks
 .github/workflows/  Future CI/CD workflows
 ```
 
-Empty directories contain `.gitkeep` markers. Runnable entry points, dependency manifests, lockfiles, migrations, and deployment configuration will be added with their implementation stages.
+Empty directories contain `.gitkeep` markers. The platform API now has a runnable entry point, dependency manifest, and lockfile. Worker, reference service, migrations, and deployment configuration follow their implementation stages.
 
 ## Initial technical direction
 

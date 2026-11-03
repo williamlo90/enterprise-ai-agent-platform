@@ -1,6 +1,6 @@
 # Repository layout
 
-Status: struktur repository telah direview QA dan skeleton dibuat sesuai rancangan. Folder menyiapkan lokasi implementasi; belum ada fitur, dependency, migration, atau deployment executable.
+Status: struktur repository telah direview QA. BE-01 menambahkan package API, config, manifest/lockfile dan tes bootstrap; folder lain tetap menyiapkan implementasi. Belum ada fitur bisnis, migration, atau deployment executable.
 
 Empat dokumen kontrak tetap di root. Struktur mengikuti [ARCHITECTURE.md](../ARCHITECTURE.md) dan tidak mengubah scope produk.
 
@@ -135,4 +135,4 @@ enterprise-ai-agent-platform/
 
 ## Kelanjutan bootstrap
 
-Pada tugas implementasi pertama, masing-masing unit executable mendapatkan manifest dan lockfile, konfigurasi tervalidasi, composition root, entry point dan instruksi run/test. Secret menggunakan environment atau secret manager; `.env.example` hanya memuat placeholder setelah nama konfigurasi diputuskan. Struktur ini tidak otomatis mengizinkan instalasi provider, pembuatan resource cloud, atau pemakaian data sensitif.
+Platform API mendapatkan manifest/lockfile, konfigurasi tervalidasi, entry point dan instruksi run/test pada BE-01; composition root dan dependency wiring diperinci pada BE-03. Unit worker/reference service mengikuti task masing-masing. Secret menggunakan environment atau secret manager; `.env.example` BE-01 hanya memuat tiga setting bootstrap tanpa credential. Struktur ini tidak otomatis mengizinkan pembuatan resource cloud atau pemakaian data sensitif.
