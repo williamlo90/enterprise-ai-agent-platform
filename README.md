@@ -8,7 +8,7 @@ The initial product combines a bilingual travel-policy assistant with reimbursem
 
 BE-01 through BE-03 are complete and QA-reviewed, with 91 passing tests including clean wheel installation. The API provides health/readiness, consistent errors, request IDs, bounded input handling, and application-local service/port wiring with architecture checks. Business features are not implemented. See [backend setup](backend/README.md).
 
-DB-01 provides an opt-in PostgreSQL connection foundation and a dedicated live-test command. Offline checks and independent QA passed (139 tests; live test skipped). Live database acceptance is pending local credentials; schema, migrations and tenant access enforcement follow in DB-02/03.
+DB-01 is complete and independently QA-reviewed: 139 offline tests and 1 live Neon integration test passed. The PostgreSQL foundation includes pooled runtime/direct migration connections, TLS verification, bounded transactions and cancellation cleanup. Schema, migrations and tenant access enforcement follow in DB-02/03.
 
 ## Planned MVP
 

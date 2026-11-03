@@ -1,6 +1,6 @@
 # Repository layout
 
-Status: struktur repository telah direview QA. BE-01/02 menyediakan package API/config dan HTTP boundary; BE-03 menambahkan composition root, modul system health, runtime readiness adapter dan guard import. DB-01 menambahkan infrastructure/database/connection.py, infrastructure/database_probe.py dan CLI database_check.py; uji DB nyata masih menunggu credential. Folder fitur lain tetap menyiapkan implementasi. Belum ada fitur bisnis, migration, atau deployment executable.
+Status: struktur repository telah direview QA. BE-01/02 menyediakan package API/config dan HTTP boundary; BE-03 menambahkan composition root, modul system health, runtime readiness adapter dan guard import. DB-01 menambahkan infrastructure/database/connection.py, infrastructure/database_probe.py dan CLI database_check.py; uji offline/live dan QA independen lulus. Folder fitur lain tetap menyiapkan implementasi. Belum ada fitur bisnis, migration, atau deployment executable.
 
 Empat dokumen kontrak tetap di root. Struktur mengikuti [ARCHITECTURE.md](../ARCHITECTURE.md) dan tidak mengubah scope produk.
 

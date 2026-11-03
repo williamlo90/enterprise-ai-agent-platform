@@ -1,6 +1,6 @@
 # Backend platform
 
-BE-01 menyediakan paket FastAPI yang dapat diinstal dan dijalankan. BE-02 menambahkan health/readiness bootstrap, error envelope, request ID dan batas input. BE-03 memasang composition root, health service/ports dan dependency wiring. DB-01 menyediakan koneksi PostgreSQL opsional dan tes offline; penerimaan database nyata menunggu credential lokal. Belum ada schema bisnis, RLS, autentikasi, RAG, worker, atau endpoint reimbursement.
+BE-01 menyediakan paket FastAPI yang dapat diinstal dan dijalankan. BE-02 menambahkan health/readiness bootstrap, error envelope, request ID dan batas input. BE-03 memasang composition root, health service/ports dan dependency wiring. DB-01 menyediakan koneksi PostgreSQL opsional dan telah lulus tes offline/live serta QA independen. Belum ada schema bisnis, RLS, autentikasi, RAG, worker, atau endpoint reimbursement.
 
 ## Persiapan
 
@@ -84,7 +84,7 @@ BE-03 ditutup dengan **91 tes lulus**, termasuk build/install wheel bersih dan r
 
 ## Koneksi database DB-01
 
-Status: implementasi dan tes offline; **penerimaan database nyata menunggu credential**. Isi `.env` lokal pada root repository dengan URI dari database/branch pengujian khusus, memakai data fiktif:
+Status: **selesai dan lulus QA**, dengan 139 tes offline dan 1 tes integrasi live Neon lulus. Bukti ada pada [hasil DB-01](../docs/backend/task_plan.md#14-hasil-pelaksanaan-db-01). Isi `.env` lokal pada root repository dengan URI dari database/branch pengujian khusus, memakai data fiktif:
 
 | Nama | Penggunaan |
 | --- | --- |
