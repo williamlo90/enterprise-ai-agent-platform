@@ -72,6 +72,29 @@ class MigrationSettings(Settings):
     database_direct_url: SecretStr = Field(validation_alias="DATABASE_DIRECT_URL", repr=False)
 
 
+class OidcProbeSettings(BaseSettings):
+    """Explicit probe only; these fields are not loaded by API startup."""
+
+    model_config = SettingsConfigDict(env_file=None, extra="ignore", frozen=True, hide_input_in_errors=True)
+    issuer: str = Field(validation_alias="OIDC_ISSUER")
+    client_id: str = Field(validation_alias="OIDC_CLIENT_ID")
+    client_secret: SecretStr = Field(validation_alias="OIDC_CLIENT_SECRET", repr=False)
+    redirect_uri: str = Field(validation_alias="OIDC_REDIRECT_URI")
+    public_origin: str = Field(validation_alias="PUBLIC_ORIGIN")
+    authorization_endpoint: str = Field(validation_alias="OIDC_AUTHORIZATION_ENDPOINT")
+    token_endpoint: str = Field(validation_alias="OIDC_TOKEN_ENDPOINT")
+    jwks_uri: str = Field(validation_alias="OIDC_JWKS_URI")
+
+
+def load_oidc_probe_settings(path: Path) -> OidcProbeSettings:
+    try:
+        if not path.is_file():
+            raise ConfigurationError("OIDC probe configuration unavailable.")
+        return OidcProbeSettings(_env_file=path, _env_file_encoding="utf-8")
+    except (OSError, UnicodeError, ValueError, SettingsError):
+        raise ConfigurationError("OIDC probe configuration unavailable.") from None
+
+
 def load_settings(
     env_file: Path | None = Path(".env"), *, require_file: bool = False,
     settings_type: type[Settings] = Settings,

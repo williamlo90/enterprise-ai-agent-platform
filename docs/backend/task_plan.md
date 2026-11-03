@@ -1,6 +1,6 @@
 # Backend task plan
 
-Status: **BE-01, BE-02, BE-03, DB-01, DB-02, dan DB-03 selesai dan lulus QA — 3 November 2026**. **AUTH-01: rancangan lulus QA, menunggu SPIKE-01; belum selesai penuh. Provider Cognito dipilih dan setup dilaporkan melalui Guru; SPIKE-01 menunggu probe login/callback aktual.** Skeleton dan dokumen bukan bukti bahwa fitur lain dalam tabel telah selesai. Acuan [backend architecture](architecture.md), [database schema](database_schema.md), [PRODUCT_CONTRACT.md](../../PRODUCT_CONTRACT.md), [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), dan [TEST_PLAN.md](../../TEST_PLAN.md).
+Status: **BE-01, BE-02, BE-03, DB-01, DB-02, dan DB-03 selesai dan lulus QA — 3 November 2026**. **AUTH-01: rancangan lulus QA, menunggu SPIKE-01; belum selesai penuh. Provider Cognito dipilih; SPIKE-01 dikerjakan, preflight provider lulus dan probe AWS disiapkan; actual login/callback serta persetujuan resource cloud belum tersedia.** Skeleton dan dokumen bukan bukti bahwa fitur lain dalam tabel telah selesai. Acuan [backend architecture](architecture.md), [database schema](database_schema.md), [PRODUCT_CONTRACT.md](../../PRODUCT_CONTRACT.md), [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), dan [TEST_PLAN.md](../../TEST_PLAN.md).
 
 ## 1. Cara menggunakan rencana
 
@@ -224,3 +224,13 @@ Urutan kerja yang dipilih pengguna mengikuti bagian 3: AUTH-01 → AUTH-02 → A
 ### Bukti bootstrap cloud Vercel
 
 Source executable `ea4dff0f1fb14aaa9090a092d3dfa7172a2dad60`, deployment dpl_Dxpn7AG3F8Wiy3ALiP7tHpTi7Kd2, domain tetap https://enterprise-ai-platform-dev.vercel.app . Dashboard Ready/build 20 detik; Root Directory backend, FastAPI. Probe eksternal Main dan **QA independen PASS**: health live/ready 200 (scope process/bootstrap), docs/callback 404 dengan envelope valid, warm health 200, routing region sin1; tanpa interstitial Vercel. DB cloud dan auth belum aktif/diuji. User dapat menghentikan backend/ngrok lokal. Callback Cognito belum diubah: target baru https://enterprise-ai-platform-dev.vercel.app/api/v1/auth/callback akan didaftarkan sebelum actual login SPIKE-01. Tidak menutup SPIKE-01/AUTH-01/OPS-01 dari hasil bootstrap ini.
+
+## 19. SPIKE-01 — provider preflight dan probe cloud terisolasi
+
+**Dikerjakan, belum selesai — 3 November 2026.** [Runbook SPIKE-01](oidc_spike.md) memisahkan bukti provider, kode terkontrol, dan actual login. Client secret lokal tersedia; nilainya tidak ditampilkan atau masuk Git.
+
+- Actual Cognito preflight lulus: configured issuer/endpoints cocok discovery, authorization code/RS256 tersedia, RSA signing keys valid, synthetic invalid code dengan client_secret_basic menghasilkan invalid_grant. Belum ada actual user login/callback atau successful PKCE exchange.
+- Canary callback Vercel hanya berisi code/state sintetis. Detail platform Request → Search Params menyimpan keduanya, meskipun stdout aplikasi sudah aman. Pengguna memilih **mempertahankan kontrak logging** dan menyiapkan probe pada cloud yang logging-nya bisa dikendalikan. Vercel bootstrap tetap berlaku; tidak menjadi host callback probe actual.
+- Implementasi portable provider/JWT validation, standalone Lambda launcher/callback/result, DynamoDB bounded durable once-only claim dan CloudFormation resource template tersedia. Probe tidak membuat sesi/principal/membership platform atau mengubah Neon/DB-03. Secret disiapkan untuk Secrets Manager, tidak ada di CloudFormation parameters/ZIP/environment plaintext. Default disabled; provisioner mensyaratkan --approve-provision dan menolak replay manifest.
+- **Persiapan lulus QA independen** setelah deadline gabungan, malformed input dan expiry diperbaiki/recheck; 58 final focused tests dari clean wheel lulus. Regresi/clean export sebelumnya 244 passed dan 3 live DB skipped; overlap tidak dijumlahkan. cfn-lint, architecture guard, build Linux ZIP dan diff checks lulus.
+- Prasyarat berikutnya: persetujuan daftar resource/biaya/IAM, provisioning isolated AWS probe, actual logging canary dan store checks, pendaftaran exact callback AWS, lalu login manusia dan QA actual. **SPIKE-01/AUTH-01/AUTH-02 belum ditandai selesai**. Cloud resource belum dibuat dari pekerjaan ini.

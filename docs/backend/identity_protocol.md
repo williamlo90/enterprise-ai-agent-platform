@@ -1,6 +1,6 @@
 # Identity protocol — AUTH-01
 
-Status: **rancangan lulus review dan recheck QA**, 3 November 2026. Rancangan awal dibuat saat pengguna belum memiliki provider. Pengguna kemudian memilih Cognito dan melaporkan setup melalui Guru; SPIKE-01 masih menunggu actual login/callback, sehingga AUTH-01 belum selesai penuh. Jalur development terbaru memakai [Vercel](vercel_development.md) sebagai pengganti ngrok. Dokumen ini menetapkan target AUTH-02, bukan bukti login tersedia. Tidak ada endpoint, credential, migration atau konfigurasi runtime auth yang dipasang melalui rancangan ini.
+Status: **rancangan lulus review dan recheck QA**, 3 November 2026. Rancangan awal dibuat saat pengguna belum memiliki provider. Pengguna kemudian memilih Cognito dan melaporkan setup melalui Guru; SPIKE-01 masih menunggu actual login/callback, sehingga AUTH-01 belum selesai penuh. API development memakai [Vercel](vercel_development.md) sebagai pengganti ngrok. Canary SPIKE-01 kemudian membuktikan query callback tersimpan di platform logs; pengguna mempertahankan kontrak logging dan [probe AWS terpisah](oidc_spike.md) disiapkan untuk actual login. Tidak menganggap callback Vercel sudah memenuhi kontrak privasi. Dokumen ini menetapkan target AUTH-02, bukan bukti login tersedia. Tidak ada endpoint, credential, migration atau konfigurasi runtime auth yang dipasang melalui rancangan ini.
 
 ## 1. Trust boundary dan keputusan dasar
 

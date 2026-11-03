@@ -191,3 +191,8 @@ python -m uv run --locked --project backend enterprise-ai-security provision --r
 ```
 
 Jangan gunakan recovery untuk role dengan privilege tak aman; preflight menolak sebelum credential diubah. Provision bukan bagian startup atau perintah rutin deploy. Neon memerlukan input password plaintext melalui SQL; input dikirim hanya lewat TLS verify-full, tidak dikembalikan lewat CLI/log/chat. Role dibuat melalui SQL agar tidak otomatis mendapat neon_superuser. Rujukan: [Neon role management](https://neon.com/docs/manage/roles), [PostgreSQL role membership](https://www.postgresql.org/docs/16/role-membership.html), [row security](https://www.postgresql.org/docs/17/ddl-rowsecurity.html).
+
+
+## OIDC feasibility SPIKE-01
+
+[Runbook provider/probe](../docs/backend/oidc_spike.md) menjelaskan CLI enterprise-ai-oidc-check dan paket standalone AWS Lambda yang default disabled. API Vercel tetap bootstrap: belum memiliki login/session. Actual Cognito discovery/JWKS dan synthetic invalid-code response telah diuji; actual login/callback dan provisioning probe AWS belum selesai. Secret lokal tidak masuk Git atau bundle. Jangan mengaktifkan callback pada host yang menyimpan query login tanpa keputusan kontrak yang sesuai.
