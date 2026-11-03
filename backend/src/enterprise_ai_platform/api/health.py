@@ -20,7 +20,7 @@ async def live(service: Annotated[HealthServicePort, Depends(get_health_service)
 
 @router.get("/ready", response_model=HealthResponse, responses={503: {"model": ErrorResponse}})
 async def ready(request: Request, service: Annotated[HealthServicePort, Depends(get_health_service)]):
-    result = service.ready()
+    result = await service.ready()
     if result.status != "ready":
         return error_response(503, request.state.request_id)
     return HealthResponse(status=result.status, scope=result.scope)

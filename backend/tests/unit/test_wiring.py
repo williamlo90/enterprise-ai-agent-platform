@@ -19,7 +19,7 @@ class UnavailableHealth:
         self.calls.append("live")
         return ProbeResult("ok", "process")
 
-    def ready(self):
+    async def ready(self):
         self.calls.append("ready")
         return ProbeResult("unavailable", "bootstrap")
 
@@ -60,16 +60,16 @@ def test_service_consumes_readiness_port_and_has_no_http_dependency():
     resources = build_resources()
     service = build_services(resources).health
     assert service.live() == ProbeResult("ok", "process")
-    assert service.ready() == ProbeResult("unavailable", "bootstrap")
+    assert asyncio.run(service.ready()) == ProbeResult("unavailable", "bootstrap")
 
     async def check():
         async with resources.lifecycle():
-            assert service.ready() == ProbeResult("ready", "bootstrap")
+            assert await service.ready() == ProbeResult("ready", "bootstrap")
             raise RuntimeError("synthetic lifecycle failure")
 
     with pytest.raises(RuntimeError, match="synthetic lifecycle failure"):
         asyncio.run(check())
-    assert service.ready() == ProbeResult("unavailable", "bootstrap")
+    assert asyncio.run(service.ready()) == ProbeResult("unavailable", "bootstrap")
 
 
 def test_services_container_is_immutable_and_resources_are_not_global():

@@ -13,8 +13,8 @@ class HealthService:
     def live(self) -> ProbeResult:
         return ProbeResult(status="ok", scope="process")
 
-    def ready(self) -> ProbeResult:
+    async def ready(self) -> ProbeResult:
         return ProbeResult(
-            status="ready" if self.readiness.is_ready() else "unavailable",
+            status="ready" if await self.readiness.check() else "unavailable",
             scope="bootstrap",
         )

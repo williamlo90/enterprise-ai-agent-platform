@@ -9,7 +9,7 @@ PACKAGES = (
     ("backend/src", "enterprise_ai_platform"),
     ("reference_service/src", "reimbursement_service"),
 )
-ROOT_FILES = {"main", "worker", "composition", "__main__"}
+ROOT_FILES = {"main", "worker", "composition", "database_check", "__main__"}
 PUBLIC = {"service", "ports"}
 UNSAFE_NAMES = {"__import__", "__builtins__", "eval", "exec"}
 DATABASE_STDLIB = {"sqlite3", "_sqlite3", "dbm", "shelve"}

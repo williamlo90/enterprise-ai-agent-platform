@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, ValidationError, field_validator
+from pydantic import Field, SecretStr, ValidationError, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic_settings.exceptions import SettingsError
 
@@ -28,6 +28,17 @@ class Settings(BaseSettings):
     port: int = Field(ge=1, le=65535)
     max_request_body_bytes: int = Field(default=1048576, ge=1, le=16777216)
     request_body_timeout_seconds: int = Field(default=10, ge=1, le=60)
+    database_enabled: bool = False
+    database_url: SecretStr | None = Field(default=None, validation_alias="DATABASE_URL", repr=False)
+
+    @field_validator("database_enabled", mode="before")
+    @classmethod
+    def validate_database_enabled(cls, value: object) -> bool:
+        if type(value) is bool:
+            return value
+        if value in ("true", "false"):
+            return value == "true"
+        raise ValueError("Use true or false.")
 
     @field_validator("host")
     @classmethod
@@ -50,8 +61,15 @@ class Settings(BaseSettings):
         raise ValueError("An integer setting is required.")
 
 
+class DatabaseProbeSettings(Settings):
+    # Loaded only by the explicitly invoked database probe, never by API startup.
+    database_url: SecretStr = Field(validation_alias="DATABASE_URL", repr=False)
+    database_direct_url: SecretStr = Field(validation_alias="DATABASE_DIRECT_URL", repr=False)
+
+
 def load_settings(
-    env_file: Path | None = Path(".env"), *, require_file: bool = False
+    env_file: Path | None = Path(".env"), *, require_file: bool = False,
+    settings_type: type[Settings] = Settings,
 ) -> Settings:
     """Load only the specified file (if present); process environment wins.
 
@@ -64,13 +82,15 @@ def load_settings(
                 if require_file or env_file.exists():
                     raise ConfigurationError("Configuration file is unavailable.")
                 env_file = None
-        return Settings(_env_file=env_file, _env_file_encoding="utf-8")
+        return settings_type(_env_file=env_file, _env_file_encoding="utf-8")
     except ValidationError as exc:
         fields = sorted(
             {
-                "APP_" + str(error["loc"][0]).upper()
+                ("" if str(error["loc"][0]).upper() in {"DATABASE_URL", "DATABASE_DIRECT_URL"} else "APP_")
+                + str(error["loc"][0]).upper()
                 for error in exc.errors(include_input=False, include_context=False)
-                if error["loc"] and error["loc"][0] in Settings.model_fields
+                if error["loc"] and (error["loc"][0] in settings_type.model_fields
+                                     or str(error["loc"][0]).startswith("DATABASE_"))
             }
         )
         suffix = ": " + ", ".join(fields) if fields else "."

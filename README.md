@@ -8,6 +8,8 @@ The initial product combines a bilingual travel-policy assistant with reimbursem
 
 BE-01 through BE-03 are complete and QA-reviewed, with 91 passing tests including clean wheel installation. The API provides health/readiness, consistent errors, request IDs, bounded input handling, and application-local service/port wiring with architecture checks. Business features are not implemented. See [backend setup](backend/README.md).
 
+DB-01 provides an opt-in PostgreSQL connection foundation and a dedicated live-test command. Offline checks and independent QA passed (139 tests; live test skipped). Live database acceptance is pending local credentials; schema, migrations and tenant access enforcement follow in DB-02/03.
+
 ## Planned MVP
 
 - Tenant-isolated knowledge retrieval with source citations, document publishing, updates, and withdrawal.

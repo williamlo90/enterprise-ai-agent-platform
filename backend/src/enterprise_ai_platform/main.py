@@ -16,10 +16,11 @@ from enterprise_ai_platform.api.health import router as health_router
 from enterprise_ai_platform.api.schemas import ErrorResponse
 from enterprise_ai_platform.config import ConfigurationError, Settings, load_settings
 from enterprise_ai_platform.composition import ApplicationServices, build_resources, build_services
+from enterprise_ai_platform.infrastructure.database.connection import DatabaseConfigurationError
 
 
 def create_app(settings: Settings, *, services: ApplicationServices | None = None) -> FastAPI:
-    resources = build_resources()
+    resources = build_resources(settings)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -59,7 +60,8 @@ def main() -> None:
     path = None if args.no_env_file else args.env_file or Path(".env")
     try:
         settings = load_settings(path, require_file=args.env_file is not None)
-    except ConfigurationError as exc:
+        app = create_app(settings)
+    except (ConfigurationError, DatabaseConfigurationError) as exc:
         print(f"Configuration error: {exc}", file=sys.stderr)
         raise SystemExit(2) from None
     if args.check_config:
@@ -74,8 +76,9 @@ def main() -> None:
     http_logger.setLevel(logging.INFO)
     http_logger.propagate = False
     uvicorn.run(
-        create_app(settings), host=settings.host, port=settings.port,
+        app, host=settings.host, port=settings.port,
         access_log=False, ws="none",
+        loop="enterprise_ai_platform.composition:database_loop_factory" if settings.database_enabled else "auto",
     )
 
 

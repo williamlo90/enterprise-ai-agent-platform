@@ -1,8 +1,10 @@
 # Backend task plan
 
-Status: **BE-01, BE-02, dan BE-03 selesai dan lulus QA — 3 November 2026**. Tugas implementasi lain **belum mulai**. Skeleton dan dokumen bukan bukti bahwa fitur lain dalam tabel telah selesai. Acuan [backend architecture](architecture.md), [database schema](database_schema.md), [PRODUCT_CONTRACT.md](../../PRODUCT_CONTRACT.md), [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), dan [TEST_PLAN.md](../../TEST_PLAN.md).
+Status: **BE-01, BE-02, dan BE-03 selesai dan lulus QA — 3 November 2026**. **DB-01 dikerjakan, menunggu uji database nyata.** Tugas berikutnya **belum mulai**. Skeleton dan dokumen bukan bukti bahwa fitur lain dalam tabel telah selesai. Acuan [backend architecture](architecture.md), [database schema](database_schema.md), [PRODUCT_CONTRACT.md](../../PRODUCT_CONTRACT.md), [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), dan [TEST_PLAN.md](../../TEST_PLAN.md).
 
 ## 1. Cara menggunakan rencana
+
+**DB-01 sedang dikerjakan:** implementasi dan pengujian offline tersedia; QA offline lulus; uji DB nyata masih menunggu. Credential akan diisi pengguna terakhir. DB-01 belum selesai dan DB-02/03 belum dimulai.
 
 Setiap tugas mempunyai ID, prasyarat, hasil yang dapat diperiksa dan bukti. Status: belum mulai → dikerjakan → menunggu review → selesai; terhambat hanya jika ada ketergantungan nyata. Implementasi ditutup setelah checks relevan, temuan QA material dan recheck, dokumentasi sesuai hasil aktual, serta diff/secret review. Commit/push mengikuti cakupan kerja yang diotorisasi; tidak menambahkan resource berbayar atau membaca secret ke chat.
 
@@ -155,3 +157,14 @@ Berikutnya **BE-03: composition root, service/port interfaces, dependency wiring
 - Batas bukti: fondasi wiring/guard saja; guard adalah static dependency regression, bukan sandbox. Tenant/business repositories, DB/UoW, auth, worker dan adapter provider belum diimplementasikan. Interface fitur masa depan tidak dianggap tersedia hanya karena health memakai Protocol.
 
 Berikutnya **DB-01: konfigurasi koneksi runtime/migration dan pengujian transaksi database**, sesuai prasyarat. Provider spike tetap dapat dijadwalkan tersendiri.
+
+## 14. Hasil sementara DB-01
+
+**Audit offline lulus — 3 November 2026. DB-01 belum selesai; menunggu uji database nyata setelah credential lokal diisi.**
+
+- Konfigurasi runtime pooled terpisah dari direct probe/migration; API tidak memuat field credential migration. Database default nonaktif agar bootstrap tetap dapat dijalankan tanpa provider. Driver terkunci: psycopg/psycopg-binary 3.3.7, psycopg-pool 3.3.3 dan certifi 2026.10.23.
+- Pool lifespan, transaction context/UoW, transaction-local SQL deadlines, bounded checkout/commit/rollback/return/shutdown, cleanup tahan cancellation berulang, TLS verify-full dan log/error redaction tersedia. Error pengembalian menutup connection yang masih dipinjam serta pool; kegagalan close connection tidak melewati pool shutdown. Windows CLI memakai SelectorEventLoop.
+- **139 tes offline lulus, 1 live test dilewati.** Salinan bersih file staged tanpa .env/virtualenv pengguna berhasil locked install, sdist/wheel build, install wheel non-editable, import adapter/TLS API dari site-packages, architecture guard, console config check dan suite penuh.
+- **QA independen meluluskan audit offline**, mereproduksi 139 passed/1 skipped dari wheel bersih revisi terakhir. Temuan material sudah diperbaiki dan lulus recheck. Tidak ada credential pengguna dibaca ke chat dan tidak ada koneksi database live dibuat.
+- `enterprise-ai-db-check` memvalidasi konfigurasi tanpa koneksi secara default. Flag `--live` menjalankan TLS runtime/direct, commit/rollback, error reuse, cancellation/deadline cleanup, shutdown dan cleanup tabel probe pada database pengujian khusus. Panduan dan konfigurasi ada pada [backend README](../../backend/README.md#koneksi-database-db-01). Live test harus lulus dan hasilnya direview sebelum DB-01 ditutup.
+- Batas bukti: pengujian fault injection/offline belum membuktikan perilaku PostgreSQL/Neon nyata. Belum ada schema bisnis, migration framework, actor/tenant context, role least-privilege atau RLS; DB-02/03 tetap belum mulai. Credential akan diisi pengguna terakhir, sesuai arahan.

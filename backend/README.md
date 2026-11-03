@@ -1,6 +1,6 @@
 # Backend platform
 
-BE-01 menyediakan paket FastAPI yang dapat diinstal dan dijalankan. BE-02 menambahkan health/readiness bootstrap, error envelope, request ID dan batas input. BE-03 memasang composition root, health service/ports dan dependency wiring. Belum ada DB, autentikasi, RAG, worker, atau endpoint reimbursement.
+BE-01 menyediakan paket FastAPI yang dapat diinstal dan dijalankan. BE-02 menambahkan health/readiness bootstrap, error envelope, request ID dan batas input. BE-03 memasang composition root, health service/ports dan dependency wiring. DB-01 menyediakan koneksi PostgreSQL opsional dan tes offline; penerimaan database nyata menunggu credential lokal. Belum ada schema bisnis, RLS, autentikasi, RAG, worker, atau endpoint reimbursement.
 
 ## Persiapan
 
@@ -49,7 +49,7 @@ Tidak ada default diam-diam untuk tiga variabel wajib. Kesalahan konfigurasi men
 ## Kontrak HTTP BE-02
 
 - `GET /health/live` → 200 `{"status":"ok","scope":"process"}`.
-- `GET /health/ready` → 200 `{"status":"ready","scope":"bootstrap"}` setelah startup. Sebelum siap/saat ditutup, respons 503 envelope. Belum memeriksa database, model, OIDC atau storage; dependency checks ditambahkan ketika komponennya dibangun.
+- `GET /health/ready` → 200 `{"status":"ready","scope":"bootstrap"}` setelah startup. Sebelum siap/saat ditutup, respons 503 envelope. Saat database diaktifkan, memeriksa koneksi aktual; outage menghasilkan 503. Model, OIDC, storage dan schema/RLS belum diperiksa.
 - Setiap request HTTP yang mencapai app mendapat UUID baru dari server pada `X-Request-ID`; input header dari klien diabaikan. Error memakai ID yang sama di body dan header. Rejected HTTP pada layer parser/server sebelum ASGI berada di luar envelope aplikasi.
 - Error berbentuk `{"error":{"code":"not_found","message":"Resource not found.","request_id":"...","retryable":false}}`. Detail exception, field values, body/query/header privat tidak ditampilkan. HTTPException memakai pesan aman terdaftar, bukan detail bebas.
 - Malformed JSON → 400; input validation → 422; body melebihi limit → 413; menerima body melewati deadline → 408; unhandled failure sebelum response start → 500. Setelah headers terkirim, respons tidak diganti JSON kedua; koneksi/stream gagal dengan exception tersanitasi.
@@ -78,6 +78,48 @@ Modul system memakai dataclass dan Protocol stdlib. Domain/ports tidak mengimpor
 
 `scripts/checks/check_architecture.py` memeriksa import AST source aplikasi termasuk relative imports, package imports, cross-module private imports dan mekanisme dynamic import. Driver database stdlib (`sqlite3`, `_sqlite3`, `dbm`, `shelve`) ditolak pada API/domain/ports/service/config sebelum whitelist stdlib diterapkan; adapter tetap boleh memakainya. Importlib/builtins, wildcard import serta eval/exec/__import__ tidak diizinkan dalam source yang diperiksa. Guard merupakan regression check arsitektur, bukan sandbox atau bukti bahwa seluruh bentuk introspeksi Python mustahil. Perubahan layer/adapter memerlukan review aturan guard; tidak mematikan check untuk meloloskan dependency baru.
 
-Worker dan repository database belum tersedia. Resource lifecycle/UoW database ditambahkan pada DB-01, dan public service bisnis mengikuti task terkait; BE-03 tidak membuat interface kosong untuk seluruh fitur masa depan.
+Worker dan repository bisnis belum tersedia. DB-01 menambahkan lifecycle dan transaction context database; public service bisnis mengikuti task terkait.
 
 BE-03 ditutup dengan **91 tes lulus**, termasuk build/install wheel bersih dan reproduksi QA independen. Temuan guard stdlib database sudah diperbaiki dan lulus recheck; catatan hasil ada pada [task plan BE-03](../docs/backend/task_plan.md#13-hasil-pelaksanaan-be-03).
+
+## Koneksi database DB-01
+
+Status: implementasi dan tes offline; **penerimaan database nyata menunggu credential**. Isi `.env` lokal pada root repository dengan URI dari database/branch pengujian khusus, memakai data fiktif:
+
+| Nama | Penggunaan |
+| --- | --- |
+| `APP_DATABASE_ENABLED` | Default `false`. Ubah ke `true` untuk API dengan dependency DB wajib; konfigurasi/koneksi gagal menggagalkan startup. |
+| `DATABASE_URL` | URI runtime pooled. Neon: endpoint `-pooler`. |
+| `DATABASE_DIRECT_URL` | URI direct untuk probe/migration saja. Neon: endpoint tanpa `-pooler`, database/endpoint dasar sama. API tidak memuat field credential direct. |
+
+Jangan menaruh URI bercredential di command line, Git atau chat. User runtime/direct boleh berbeda; least privilege dan RLS merupakan DB-03. Parser menerima PostgreSQL hostname tunggal, username/password/dbname, dengan query hanya `sslmode=require`/`verify-full` dan `channel_binding=prefer`/`require`. Koneksi selalu memakai **verify-full**, CA certifi dan pemeriksaan hostname. Opsi pengalihan koneksi/pelemahan TLS ditolak. Pairing mendukung endpoint sama atau bentuk Neon `-pooler`; provider dengan hostname/port pooling berbeda membutuhkan aturan pairing tersendiri.
+
+Pool runtime dibuka/ditutup oleh lifespan, min 0/maks 2 koneksi per aplikasi, maksimal 8 penunggu. Startup menguji koneksi dan TLS sungguhan; membuka pool kosong saja tidak dianggap siap. Prepared statements dinonaktifkan untuk transaction pooling.
+
+`RuntimeDatabase.transaction()` menyediakan commit saat sukses dan rollback saat exception. Checkout termasuk connection check dibatasi 5 detik; seluruh transaksi 15 detik; commit/rollback/cleanup masing-masing dibatasi 5 detik. Driver cancellation dan cleanup dapat menambah waktu setelah deadline kerja. Timeout/cancel/error SQL membuang koneksi yang mungkin tidak aman, lalu pool menggantinya. Statement timeout 5 detik, lock timeout 2 detik dan idle-in-transaction 10 detik dipasang transaction-local. Actor/tenant context belum ada. Jangan menunggu model/HTTP call di dalam transaksi.
+
+Validasi konfigurasi saja, tanpa koneksi atau SQL:
+
+```powershell
+python -m uv run --locked --project backend enterprise-ai-db-check --env-file .env
+```
+
+Setelah credential siap, uji nyata dengan `--live` di bawah. Probe membuat tabel unik `public.db01_probe_*`, memberi SELECT/INSERT ke runtime user, lalu menghapusnya pada cleanup. Direct user harus dapat CREATE/GRANT/DROP di database pengujian itu. Kegagalan cleanup menggagalkan probe; periksa tabel berprefix tersebut secara lokal sebelum mengulang.
+
+```powershell
+python -m uv run --locked --project backend enterprise-ai-db-check --env-file .env --live
+```
+
+Probe memeriksa TLS runtime/direct, commit yang terlihat melalui direct, rollback, SQL error lalu reuse, cancellation, deadline, shutdown dan penghapusan tabel. Output hanya status tersanitasi, tanpa URI/SQL input/exception driver mentah. `APP_DATABASE_ENABLED` boleh tetap `false` untuk probe. Kelulusannya tidak membuktikan tenant isolation, migration framework atau performance produksi.
+
+Suite biasa selalu memakai konfigurasi fiktif dan **melewati live test**. Untuk memasukkan live test ke pytest setelah `.env` siap:
+
+```powershell
+$env:RUN_DATABASE_TESTS = '1'
+python -m uv run --locked --project backend pytest backend/tests
+Remove-Item Env:RUN_DATABASE_TESTS
+```
+
+CLI API/probe memilih SelectorEventLoop pada Windows karena psycopg async tidak mendukung Proactor. Host ASGI lain harus menggunakan loop kompatibel. Liveness tetap process-only; readiness melakukan ping ketika DB aktif. Migration tidak berjalan otomatis pada startup API. Credential migration tidak menjadi resource runtime.
+
+Rujukan teknis: [psycopg async/Windows](https://www.psycopg.org/psycopg3/docs/advanced/async.html), [psycopg pool lifecycle](https://www.psycopg.org/psycopg3/docs/advanced/pool.html), dan [PostgreSQL TLS verification](https://www.postgresql.org/docs/current/libpq-ssl.html). TLS diperiksa pada koneksi client melalui libpq; statistik koneksi backend di balik pooler tidak dipakai sebagai bukti TLS client.
