@@ -31,6 +31,7 @@ htmlcov/
 
 # JavaScript and build output
 node_modules/
+.vercel/
 dist/
 build/
 coverage/

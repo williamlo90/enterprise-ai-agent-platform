@@ -34,3 +34,6 @@ build-backend = "uv_build"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--strict-config --strict-markers"
+
+[tool.vercel]
+entrypoint = "asgi:app"

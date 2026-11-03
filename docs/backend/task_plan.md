@@ -1,6 +1,6 @@
 # Backend task plan
 
-Status: **BE-01, BE-02, BE-03, DB-01, DB-02, dan DB-03 selesai dan lulus QA — 3 November 2026**. **AUTH-01: rancangan lulus QA, menunggu SPIKE-01; belum selesai penuh. SPIKE-01 tertahan karena provider belum dipilih/tersedia.** Skeleton dan dokumen bukan bukti bahwa fitur lain dalam tabel telah selesai. Acuan [backend architecture](architecture.md), [database schema](database_schema.md), [PRODUCT_CONTRACT.md](../../PRODUCT_CONTRACT.md), [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), dan [TEST_PLAN.md](../../TEST_PLAN.md).
+Status: **BE-01, BE-02, BE-03, DB-01, DB-02, dan DB-03 selesai dan lulus QA — 3 November 2026**. **AUTH-01: rancangan lulus QA, menunggu SPIKE-01; belum selesai penuh. Provider Cognito dipilih dan setup dilaporkan melalui Guru; SPIKE-01 menunggu probe login/callback aktual.** Skeleton dan dokumen bukan bukti bahwa fitur lain dalam tabel telah selesai. Acuan [backend architecture](architecture.md), [database schema](database_schema.md), [PRODUCT_CONTRACT.md](../../PRODUCT_CONTRACT.md), [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), dan [TEST_PLAN.md](../../TEST_PLAN.md).
 
 ## 1. Cara menggunakan rencana
 
@@ -211,3 +211,12 @@ Urutan kerja yang dipilih pengguna mengikuti bagian 3: AUTH-01 → AUTH-02 → A
 - **QA independen lulus recheck rancangan** setelah lima temuan P2 diperbaiki: dependency closure tidak melingkar, proteksi bootstrap CSRF same-origin, callback prefix dan urutan issuer check, rate limit IP/binding independen, serta validitas/isolasi fixture expiry. Tidak ada temuan material tersisa dalam scope rancangan.
 - **84 skenario expected-only** tersedia; pemeriksaan statis meluluskan parse JSON, ID unik/berurutan, field wajib, nonce baseline terikat/43 karakter dan relative links. git diff --check bersih. QA mengonfirmasi baseline dan batas waktu secara independen. Ini **bukan 84 tes autentikasi lulus**; tidak ada uji provider/login/DB/runtime auth dalam pekerjaan dokumen ini.
 - Tujuh artifact kontrak/fixture diperbarui. Source runtime, dependency, migration terpasang, database dan .env tidak berubah. Berikutnya pilih/setup provider dan tuntaskan SPIKE-01, kemudian bekukan AUTH-01 sebelum implementasi AUTH-02.
+
+## 18. Persiapan Vercel development untuk SPIKE-01
+
+**Persiapan lulus QA — 3 November 2026; deployment cloud belum diverifikasi pada catatan ini.** Pengguna memilih Cognito, menyelesaikan setup lewat Guru (Singapore, app client confidential, code/openid/profile, akun penguji), lalu memilih Vercel menggantikan ngrok agar backend tidak terus berjalan di laptop. AUTH-01 masih menunggu bukti SPIKE-01; setup console bukan actual login/callback proof. Catatan §17 merekam kondisi saat rancangan pertama dibuat, bukan status provider terkini.
+
+- Entrypoint ASGI membaca environment platform saja, tidak menemukan .env lokal. Konfigurasi root backend/FastAPI/Python 3.13, region sin1 dan deadline 30 detik, pengecualian dotenv/venv/tests, serta [runbook Vercel development](vercel_development.md) tersedia.
+- **188 tes lulus, 3 integrasi DB live dilewati**, architecture guard dan diff checks lulus. Dua tes subprocess entrypoint membuktikan health/lifecycle/config fail-closed dan isolasi dotenv. **QA independen PASS**, mereproduksi suite serta clean non-editable install/entrypoint tests/wheel/sdist. Tidak ada temuan blocker persiapan.
+- Bootstrap deploy dimulai dengan DB disabled dan tanpa credential auth/direct DB. Region/build/HTTP/cloud Neon harus dibuktikan aktual sebelum diklaim. Shared persistent login/session/limiter, callback log privacy dan cloud cleanup tetap gate terkait, bukan dijamin dari source config. Limit 4.5 MB platform dan shutdown 500ms dicatat untuk fitur berikutnya.
+- Ini deployment development tambahan; **OPS-01 target AWS tidak dinyatakan selesai/diganti**. Provider Cognito tetap; Allowed callback URL akan diselaraskan ke domain Vercel actual setelah tersedia. Tidak memulai AUTH-02 atau mengganti urutan task plan.

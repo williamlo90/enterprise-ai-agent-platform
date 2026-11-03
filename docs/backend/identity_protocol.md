@@ -1,6 +1,6 @@
 # Identity protocol — AUTH-01
 
-Status: **rancangan lulus review dan recheck QA**, 3 November 2026. Pengguna belum memiliki provider dan meminta rancangan dahulu. SPIKE-01 tertahan pada pemilihan/akses provider; AUTH-01 belum selesai penuh. Dokumen ini menetapkan target AUTH-02, bukan bukti login tersedia. Tidak ada endpoint, credential, migration atau konfigurasi runtime auth yang dipasang melalui rancangan ini.
+Status: **rancangan lulus review dan recheck QA**, 3 November 2026. Rancangan awal dibuat saat pengguna belum memiliki provider. Pengguna kemudian memilih Cognito dan melaporkan setup melalui Guru; SPIKE-01 masih menunggu actual login/callback, sehingga AUTH-01 belum selesai penuh. Jalur development terbaru memakai [Vercel](vercel_development.md) sebagai pengganti ngrok. Dokumen ini menetapkan target AUTH-02, bukan bukti login tersedia. Tidak ada endpoint, credential, migration atau konfigurasi runtime auth yang dipasang melalui rancangan ini.
 
 ## 1. Trust boundary dan keputusan dasar
 
@@ -76,7 +76,7 @@ AUTH-02 harus menambah rate limiting sebelum exposure: endpoint login dan callba
 
 [Fixture SEC-06](../../backend/tests/contracts/identity_protocol_cases.json) berisi synthetic baselines dan delta kasus untuk pelaksana tes AUTH-02. Seluruh expected hasil adalah **spesifikasi, belum actual execution**. Tidak ada signature/key/provider test yang dijalankan oleh JSON tersebut. AUTH-02 harus mengikat tiap ID ke automated assertion pada adapter/HTTP/repository terkait; AUTH-01 review memeriksa kelengkapan/kontradiksi, bukan menghitung kasus ini sebagai tests passed.
 
-SPIKE-01: pilih provider/client/issuer/region dan HTTPS dev callback, verifikasi discovery/JWKS/RS256/S256/client_secret_basic, actual login+callback, sanitized errors/rotation/timeout constraints, tanpa token/PII di bukti. Kalau provider tidak kompatibel, revisi keputusan ini dan fixture sebelum login implementasi diterima. Dengan provider belum ada, rancangan dapat direview tetapi status task tetap menunggu SPIKE-01. Tidak menganggap provider test lokal sebagai integrasi live.
+SPIKE-01: pilih provider/client/issuer/region dan HTTPS dev callback, verifikasi discovery/JWKS/RS256/S256/client_secret_basic, actual login+callback, sanitized errors/rotation/timeout constraints, tanpa token/PII di bukti. Kalau provider tidak kompatibel, revisi keputusan ini dan fixture sebelum login implementasi diterima. Provider Cognito kini dipilih; rancangan sudah direview, tetapi status task tetap menunggu verifikasi live SPIKE-01. Tidak menganggap provider test lokal sebagai integrasi live.
 
 AUTH-02 acceptance: actual provider login, SEC-06 negative fixtures, callback concurrency/replay atomicity, real restricted DB role, session/CSRF/tenant rotation, boundary expiry, distributed persistence/restart, no secret logging dan regresi DB-03. AUTH-01 dibekukan dan ditutup **setelah SPIKE-01 lulus serta review kontrak/settings/fixtures lulus**, sebelum AUTH-02 dimulai. AUTH-02 membuktikan implementasi kontrak beku melalui bukti ini dan QA independen; temuan saat implementasi boleh memicu revisi kontrak terkontrol, bukan prasyarat melingkar penutupan AUTH-01.
 
