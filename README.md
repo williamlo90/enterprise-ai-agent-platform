@@ -27,6 +27,9 @@ Reimbursement payments are outside the MVP. Cloud operations and open-source inf
 | [Data and API contracts](DATA_AND_API_CONTRACTS.md) | Data ownership, API behavior, authorization, and state transitions. |
 | [Test plan](TEST_PLAN.md) | Requirement coverage, initial 80-case RAG and 24-scenario workflow packs, critical suites, and manual–assisted pilot. |
 | [Repository layout](docs/REPOSITORY_LAYOUT.md) | Folder responsibilities, module boundaries, test placement, and bootstrap conventions. |
+| [Backend architecture](docs/backend/architecture.md) | Package boundaries, dependency rules, composition, transactions, and worker execution. |
+| [Database schema](docs/backend/database_schema.md) | Tables, types, relationships, constraints, indexes, tenant isolation, and migration phases. |
+| [Backend task plan](docs/backend/task_plan.md) | Task IDs, prerequisites, completion evidence, and milestones; implementation starts with BE-01. |
 
 ## Repository structure
 

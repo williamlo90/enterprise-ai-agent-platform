@@ -104,6 +104,10 @@ enterprise-ai-agent-platform/
 │   └── infrastructure/
 ├── docs/
 │   ├── REPOSITORY_LAYOUT.md
+│   ├── backend/
+│   │   ├── architecture.md
+│   │   ├── database_schema.md
+│   │   └── task_plan.md
 │   ├── decisions/
 │   └── runbooks/
 └── .github/workflows/
