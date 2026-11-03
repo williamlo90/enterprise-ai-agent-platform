@@ -99,6 +99,8 @@ Hash didefinisikan per operation kind. Submission mengikat snapshot draf/consent
 
 ### API browser — identity dan tenant
 
+Detail target identity berada pada [rancangan AUTH-01](docs/backend/identity_protocol.md); provider/SPIKE-01 belum tersedia dan endpoint berikut belum diimplementasikan. Semua path identity tabel di bawah relatif terhadap /api/v1: callback eksternal adalah /api/v1/auth/callback. Target GET /me juga mengembalikan csrf_token baru secara no-store untuk frontend same-origin, dengan header X-EAI-CSRF-Bootstrap: 1, Sec-Fetch-Site: same-origin dan Origin bila hadir wajib exact; penolakan tidak merotasi hash; sesi opaque tetap cookie HttpOnly. TTL, rotation dan akses repository terbatas mengikuti rancangan tersebut setelah dibekukan terhadap provider.
+
 | Endpoint | Kontrak |
 | --- | --- |
 | GET /auth/login, GET /auth/callback | OIDC state/nonce/PKCE dan redirect allowlist; callback gagal tidak membuat sesi |

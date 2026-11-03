@@ -69,6 +69,8 @@ ActorContext berasal dari sesi server-side atau credential service+delegasi terv
 
 OIDC code+PKCE, issuer/audience/signature/expiry/state/nonce dan redirect allowlist diperiksa; cookie opaque Secure/HttpOnly/SameSite, CSRF pada mutasi. Callback/nonce/session lifetime dikunci pada AUTH-01. Tenant switch hanya membership aktif dan tidak mengadopsi run. Logout/revocation tidak menunggu token model atau restart API.
 
+Rincian target AUTH-01 ada pada [identity protocol](identity_protocol.md). Statusnya rancangan sambil menunggu SPIKE-01/provider, bukan auth runtime yang sudah diterapkan. AUTH-02 harus mengimplementasikan storage transaksi login dan sesi melalui capability terbatas tanpa admin credential pada API.
+
 Signed delegation mengikat audience/caller, actor/tenant, action/object/version, request hash, operation ID, jti dan expiry. Key rotation serta replay checks dibangun pada AUTH-04. Current membership/policy/file/claim relationship diperiksa lagi pada boundary yang relevan; signed snapshot bukan izin abadi. API approval hanya menerima aksi manusia terautentikasi; tool registry tidak memasang grant keputusan. Hanya identity service yang berwenang menyatakan current grants, tetapi service reimbursement tetap menegakkan own object/state/anti-self-approval.
 
 RLS runtime tenant+actor-context bukan owner/BYPASSRLS; worker job membawa context scoped dan harus revalidate, bukan trusted tenant dari job payload bebas. DB tenant FK melengkapi application authorization. Principal/session global tables dibatasi repository/role khusus; tidak memberi runtime akses seluruh identity contents tanpa scope.

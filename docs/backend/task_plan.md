@@ -1,6 +1,6 @@
 # Backend task plan
 
-Status: **BE-01, BE-02, BE-03, DB-01, DB-02, dan DB-03 selesai dan lulus QA — 3 November 2026**. Tugas berikutnya **belum mulai**. Skeleton dan dokumen bukan bukti bahwa fitur lain dalam tabel telah selesai. Acuan [backend architecture](architecture.md), [database schema](database_schema.md), [PRODUCT_CONTRACT.md](../../PRODUCT_CONTRACT.md), [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), dan [TEST_PLAN.md](../../TEST_PLAN.md).
+Status: **BE-01, BE-02, BE-03, DB-01, DB-02, dan DB-03 selesai dan lulus QA — 3 November 2026**. **AUTH-01: rancangan lulus QA, menunggu SPIKE-01; belum selesai penuh. SPIKE-01 tertahan karena provider belum dipilih/tersedia.** Skeleton dan dokumen bukan bukti bahwa fitur lain dalam tabel telah selesai. Acuan [backend architecture](architecture.md), [database schema](database_schema.md), [PRODUCT_CONTRACT.md](../../PRODUCT_CONTRACT.md), [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), dan [TEST_PLAN.md](../../TEST_PLAN.md).
 
 ## 1. Cara menggunakan rencana
 
@@ -200,4 +200,14 @@ Berikutnya **DB-03: runtime least privilege, transaction-local actor/tenant dan 
 - Bukti tersanitasi di local/db03-last-verification.txt, local/db03-clean-verification.txt dan local/db03-deployment-verification.txt diabaikan Git. Semua role/schema probe dibersihkan berdasarkan namespace milik run dan binding OID; role aplikasi tetap dipertahankan.
 - Batas klaim: pemegang credential SQL dapat memasang context sendiri; identitas actor harus dibuktikan AUTH, dan agent/browser tidak memperoleh SQL/credential. Write fixture tidak menjadi grant DML foundation produksi. Belum ada login OIDC, seluruh object/scope/sensitivity policy, role self-escalation API, fitur RAG/workflow, atau klaim compliance/production security penuh. PUBLIC TEMP PostgreSQL tidak dicabut secara database-wide; helper qualified/fixed search_path dan aplikasi tidak membuat objek sendiri.
 
-DB-04 sudah memenuhi prasyarat untuk pola feature migration/expand-contract; AUTH-01 tetap memerlukan SPIKE-01.
+Urutan kerja yang dipilih pengguna mengikuti bagian 3: AUTH-01 → AUTH-02 → AUTH-03 → AUTH-04 → DB-04. DB-04 memenuhi dependency tetapi belum dikerjakan. AUTH-01 tetap memerlukan SPIKE-01; rancangan independen boleh disiapkan dahulu tanpa klaim integrasi provider.
+
+## 17. Rancangan AUTH-01 dan ketergantungan SPIKE-01
+
+**Rancangan lulus QA — 3 November 2026, task belum selesai penuh.** Pengguna meminta AUTH-01 dan mengonfirmasi belum memiliki provider: siapkan rancangan dahulu. [Identity protocol](identity_protocol.md) menetapkan target flow/settings, issuer/audience/keys, state/nonce/PKCE, redirect, session/CSRF/lifetime/rotation/revocation, batas resource dan kebutuhan migration/capability AUTH-02. [Fixture SEC-06](../../backend/tests/contracts/identity_protocol_cases.json) adalah katalog input/expected hasil sintetis; bukan tes yang sudah dieksekusi atau bukti signature/provider login.
+
+- SPIKE-01 **tertahan pada pemilihan/akses provider**, belum ada issuer/client/registered callback maupun actual login. Provider tidak dipilih atau diprovision diam-diam. Tidak membuat credential auth atau mengubah .env/database.
+- AUTH-01 boleh direview sebagai rancangan, tetapi pembekuan akhir/penutupan task menunggu verifikasi SPIKE-01 terhadap provider terpilih. AUTH-02 belum dimulai; endpoint login/session tetap belum tersedia.
+- **QA independen lulus recheck rancangan** setelah lima temuan P2 diperbaiki: dependency closure tidak melingkar, proteksi bootstrap CSRF same-origin, callback prefix dan urutan issuer check, rate limit IP/binding independen, serta validitas/isolasi fixture expiry. Tidak ada temuan material tersisa dalam scope rancangan.
+- **84 skenario expected-only** tersedia; pemeriksaan statis meluluskan parse JSON, ID unik/berurutan, field wajib, nonce baseline terikat/43 karakter dan relative links. git diff --check bersih. QA mengonfirmasi baseline dan batas waktu secara independen. Ini **bukan 84 tes autentikasi lulus**; tidak ada uji provider/login/DB/runtime auth dalam pekerjaan dokumen ini.
+- Tujuh artifact kontrak/fixture diperbarui. Source runtime, dependency, migration terpasang, database dan .env tidak berubah. Berikutnya pilih/setup provider dan tuntaskan SPIKE-01, kemudian bekukan AUTH-01 sebelum implementasi AUTH-02.

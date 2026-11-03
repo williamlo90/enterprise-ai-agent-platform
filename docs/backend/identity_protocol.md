@@ -1,0 +1,85 @@
+# Identity protocol — AUTH-01
+
+Status: **rancangan lulus review dan recheck QA**, 3 November 2026. Pengguna belum memiliki provider dan meminta rancangan dahulu. SPIKE-01 tertahan pada pemilihan/akses provider; AUTH-01 belum selesai penuh. Dokumen ini menetapkan target AUTH-02, bukan bukti login tersedia. Tidak ada endpoint, credential, migration atau konfigurasi runtime auth yang dipasang melalui rancangan ini.
+
+## 1. Trust boundary dan keputusan dasar
+
+Browser memakai sesi opaque dari backend (BFF), bukan bearer ID/access token OIDC. Satu issuer/client per deployment MVP; federasi issuer per tenant di luar MVP. Principal diidentifikasi dengan pasangan issuer exact + subject case-sensitive, bukan email. Login sah tidak otomatis membuat membership atau role. Provisioning membership terpisah; identitas baru boleh memiliki sesi tanpa active tenant dan hanya mengakses identitas/logout/pemilihan membership yang sah.
+
+TenantActorContext hanya dibuat backend setelah sesi, principal, tenant dan membership diperiksa pada request saat ini. Klaim role/tenant dari provider, query, prompt, header atau browser tidak menjadi otorisasi. Seluruh autentikasi gagal tertutup ketika DB/pemeriksaan wajib tidak tersedia. Resolusi sesi sebelum tenant diketahui memakai repository/fungsi terbatas yang dirancang dan diuji AUTH-02; tidak memberi runtime SELECT/DML umum ke tabel sesi dan tidak memakai direct/admin credential pada API.
+
+## 2. Deployment settings yang wajib divalidasi
+
+Nama berikut adalah **rencana**, belum field Settings/.env yang executable:
+
+| Setting | Kontrak |
+| --- | --- |
+| OIDC_ISSUER | URI HTTPS exact dari provider terpilih; issuer discovery dan token harus identik termasuk trailing slash. Tidak berasal dari request. |
+| OIDC_CLIENT_ID | Audience ID token exact; nonempty ≤256 byte. |
+| OIDC_CLIENT_SECRET | Secret lokal/secret manager, backend saja; dipakai client_secret_basic untuk confidential client MVP. Provider harus mendukung metode ini dan S256. |
+| OIDC_REDIRECT_URI | Satu URL HTTPS exact, path /api/v1/auth/callback, tanpa query/fragment/userinfo; diregistrasi identik pada provider. |
+| PUBLIC_ORIGIN | Origin HTTPS fixed untuk browser same-origin BFF; tidak dibangun dari Host/forwarded headers tidak tepercaya. |
+| OIDC_ENDPOINT_ALLOWLIST | Authorization/token/JWKS endpoint exact hasil spike. HTTPS, tanpa userinfo/fragment; backend token/JWKS fetch tanpa redirect dan dengan egress allowlist. Discovery hanya dari issuer operator-configured, tidak arbitrary tenant URL. |
+| OIDC_SIGNING_ALGORITHM | RS256 saja untuk baseline; provider tidak kompatibel berarti keputusan ini direview sebelum implementasi, tanpa fallback algoritme otomatis. |
+
+Baseline development juga HTTPS (sertifikat lokal/tunnel terkonfigurasi dan redirect terdaftar); tidak menurunkan Secure cookie otomatis. Trust proxy hanya dari proxy yang ditetapkan, bukan semua caller. Tidak ada resource cloud berbayar/provider yang diprovision dari dokumen ini. Region, provider retention, biaya dan aturan data diselesaikan sebelum data sensitif digunakan.
+
+Login disabled/default sampai semua settings dan SPIKE-01 lulus. AUTH-02 harus menambah settings beserta validation/precedence/redaction tests; config bootstrap yang ada tetap tidak berubah.
+
+## 3. Authorization transaction dan callback
+
+Authorization Code flow saja, response_type=code, response_mode=query, scopes openid profile; tanpa offline_access dan tanpa penyimpanan refresh token. Access token tidak dipakai untuk API platform. Userinfo tidak diperlukan MVP; optional display_name hanya metadata tak tepercaya yang dibatasi panjang/di-escape.
+
+Backend menghasilkan state, nonce, browser binding dan PKCE verifier masing-masing dari 32 random bytes CSPRNG (base64url tanpa padding, 43 karakter). S256 challenge = base64url(SHA256(verifier ASCII)). Verifier disimpan server-side secara terlindungi dan hanya selama transaksi; tidak pernah dalam cookie/URL/log. State/nonce/binding disimpan sebagai SHA-256 hash domain-separated, dibandingkan constant-time setelah pemeriksaan format. TTL transaksi **300 detik**, tanpa perpanjangan dan tanpa clock-skew grace. Cookie __Host-eai-login opaque binding, Secure/HttpOnly/SameSite=Lax/Path=/, tanpa Domain, Max-Age=300. Satu transaksi aktif per browser; login baru membatalkan yang lama, termasuk login dari tab lain.
+
+GET /api/v1/auth/login hanya boleh return_to dari enum server: home → /, tenant_picker → /tenants. Default home. Caller tidak mengirim URL/path bebas. Code/state/issuer/error callback harus parameter tunggal; duplicate, code+error, parameter auth wajib hilang, binding salah, state asing/expired/replayed ditolak. Batas code **4096 byte**, state **43 karakter**, total query **8192 byte**; token/JWT maksimum **16384 byte**. Error provider hanya menghasilkan kode lokal generik.
+
+Callback memvalidasi binding/state/expiry lalu **mengklaim transaksi atomik sekali saja sebelum token exchange**. Callback paralel hanya satu pemenang; gagal/timeout sesudah claim memerlukan login baru. State asing tidak boleh membatalkan transaksi browser yang sah. Token endpoint menerima code + verifier + redirect exact + client authentication; deadline total 10 detik, tanpa retry otomatis untuk code yang sekali pakai. Authorization response pada query callback: iss bila ada wajib parameter tunggal dan exact configured issuer, diperiksa sebelum atomic claim maupun token exchange; ini berbeda dari iss ID token yang diperiksa setelah verifikasi signature. Provider tanpa authorization-response iss hanya boleh dengan single configured issuer dan endpoint tetap, dibuktikan spike.
+
+ID token diverifikasi memakai library JOSE/OIDC terawat yang dipilih AUTH-02; tidak membuat crypto sendiri. Tolak alg selain RS256, none/HMAC, token malformed/duplicate JSON claims, jku/x5u atau key URL token-controlled. kid wajib nonempty ≤128 byte dan cocok tepat satu signing RSA key ≥2048 bit (kty/use/key_ops/alg kompatibel). Signature wajib diverifikasi terhadap key tepercaya **sebelum** klaim menjadi identitas.
+
+Klaim wajib: iss, sub nonempty ≤512 UTF-8 byte, aud, exp, iat, nonce. aud string atau array nonempty tanpa duplikat harus mencakup client_id; multi-audience wajib azp=client_id, azp bila ada selalu wajib sama. NumericDate berupa integer (bukan boolean/string), nbf opsional. Clock skew **60 detik**: tolak now ≥ exp+60; iat > now+60; nbf > now+60; exp ≤ iat; iat < now−600−60. Nonce wajib cocok transaksi; subject/issuer tidak dinormalisasi. Batas issuer 2048 byte mengikuti DB. Claims fixture unsigned hanya input spesifikasi; bukan token yang bisa diterima.
+
+Setelah validasi lengkap, backend resolve/create principal, pastikan active, buat sesi dan invalidasi sesi browser lama secara atomik; identity mismatch tidak melakukan account linking lewat email. Jika transaksi DB gagal, tidak menerbitkan cookie/sesi sukses. Callback memakai Cache-Control:no-store dan Referrer-Policy:no-referrer, segera 303 ke route enum tanpa query auth. Logs/traces/proxy tidak menyimpan query callback, cookie, verifier, token, secret atau raw exception. Jangan load analytics/third-party resource pada callback.
+
+## 4. JWKS dan gangguan provider
+
+Cache keys terisolasi issuer, maksimum 1 jam dari fetch berhasil; refresh terjadwal sesudah 15 menit. Unknown kid memicu paling banyak satu refresh per issuer per 60 detik, single-flight lintas request; negative cache selama 60 detik, ukuran maksimal 128 kid/issuer. Fetch timeout 5 detik dan respons maksimum 256 KiB/32 keys. Kegagalan refresh tidak mengganti keyset valid dengan data parsial/kosong. Key yang dihapus provider hilang segera setelah refresh sukses. Known key cache boleh dipakai hingga umur 1 jam selama outage; sesudah itu login ditolak. Unknown/ambiguous kid selalu ditolak jika refresh gagal. Ini batas risiko key rotation, bukan pencabutan key instan. Provider outage tidak membatalkan sesi lokal yang masih sah, tetapi dependency DB/session tetap wajib tersedia.
+
+## 5. Sesi, CSRF dan pencabutan
+
+Sesi dan CSRF secret masing-masing 32 random bytes/43 base64url chars. DB hanya menyimpan lowercase hex SHA-256 dari ASCII `eai:session:v1:` + token dan `eai:csrf:v1:` + secret (64 chars); entropy token tinggi, bukan password manusia. ID sesi UUID terpisah dari credential. Cookie __Host-eai-session Secure/HttpOnly/SameSite=Lax/Path=/ tanpa Domain; Max-Age maksimal **28800 detik (8 jam)**. Token tidak dikirim lewat JSON, URL, localStorage atau Authorization fallback.
+
+Server absolute expiry 8 jam dari login awal, idle expiry **1800 detik**; tepat batas dianggap expired, tanpa skew. Last activity diupdate atomik hanya pada request sesi yang berhasil dan sah; polling/sesi invalid tidak memperpanjang lifetime otomatis. GET /api/v1/me menjadi bootstrap CSRF: respons no-store berisi raw csrf_token sesi bagi same-origin frontend; server menyimpan hash dan nilai raw hanya di browser memory setelah bootstrap. Agar token dapat dibaca kembali setelah reload tanpa menyimpan raw server-side, AUTH-02 memakai **CSRF rotation pada GET /api/v1/me**: hasilkan secret baru, atomik ganti hash; respons concurrent lama dapat menjadi stale dan menerima 403. Frontend refetch /api/v1/me lalu minta pengguna mengulang mutasi, tidak retry transaksi bisnis otomatis. GET /api/v1/me bukan mekanisme memperpanjang idle expiry. Tidak ada cache respons berisi identitas/CSRF.
+
+Pengecualian bootstrap GET /api/v1/me yang merotasi CSRF wajib: sesi aktif, header X-EAI-CSRF-Bootstrap: 1, Sec-Fetch-Site: same-origin, dan Origin bila hadir harus exact PUBLIC_ORIGIN (null ditolak). Origin boleh absent hanya pada GET ini dengan kedua header wajib tersebut; tidak memerlukan CSRF lama. Missing/foreign/same-site/cross-site metadata atau header salah ditolak 403 **sebelum mengubah hash CSRF**, tanpa memperpanjang idle. Navigasi langsung tanpa header tidak merotasi. CORS cross-origin tertutup termasuk preflight custom header. Seluruh instance menerapkan syarat yang sama.
+
+Semua mutasi browser selain pengecualian bootstrap di atas, termasuk logout dan tenant switch: sesi aktif, Content-Type application/json, X-CSRF-Token exact, Origin exact PUBLIC_ORIGIN; missing/null/foreign Origin ditolak (403), tanpa fallback Referer. CORS credential lintas origin dimatikan; OPTIONS tidak melakukan mutasi. GET login/callback adalah pengecualian transaksi autentikasi dengan state/binding di atas. SameSite bukan satu-satunya proteksi CSRF. Model/worker tidak mendapat cookie atau secret CSRF dan tidak dapat memalsukan aksi manusia.
+
+Login sukses, perubahan privilege dan tenant switch merotasi session token + csrf secret; token lama dicabut atomik. Tenant switch menerima UUID membership aktif milik principal saat ini, mengecek tenant/principal aktif, tetap mempertahankan login awal/absolute expiry (tidak reset 8 jam), membuat active_tenant binding baru, tidak mengadopsi run/conversation/draft/approval context lama. Request baru memakai hak terkini; request/action yang sedang berjalan wajib recheck sebelum efek eksternal sesuai kontrak workflow. Membership dicabut membuat tenant-bound akses ditolak segera, bukan menunggu cookie/token expired; sesi masih dapat logout/lihat identitas/pilih tenant lain yang sah.
+
+Logout POST mencabut sesi server terlebih dahulu, lalu menghapus cookie dengan atribut/path yang sama. Token lama setelah logout menghasilkan 401; cookie hilang tanpa sesi berarti 401 dan clear cookie, bukan klaim revoke sukses. Jika DB gagal, 503, jangan mengaku revocation berhasil. Principal disable menolak semua sesinya pada pemeriksaan berikutnya. Logout lokal tidak menjanjikan logout SSO provider; provider-side/back-channel logout dan global session invalidation harus ditentukan dari kemampuan provider, bukan diklaim tersedia. MVP tidak menyimpan refresh token atau melakukan silent renewal.
+
+## 6. Perubahan data dan API yang diperlukan AUTH-02
+
+Migration baru diperlukan; jangan mengedit 0001–0003 yang sudah terpasang:
+
+- Durable login_transactions: hashed state/nonce/browser binding, protected verifier, return_to enum, issuer/client/redirect binding, created/expires/consumed timestamps. Atomic claim dan cleanup expired; kehilangan store menolak callback. Verifier deletion pada claim completion/expiry; jika terenkripsi, key dari secret manager terpisah dengan rotasi dan tanpa log plaintext.
+- sessions: last_seen_at dan authenticated_at untuk idle/absolute expiry lintas rotation, constraint/hash format, indexes expiry/cleanup. Backfill konservatif: sesi tanpa bukti umur sah dicabut, tidak diperpanjang. Tiada sesi pengguna sekarang untuk dibackfill.
+- Scoped identity repository/functions: login principal resolution/upsert, atomic consume/create/rotate/revoke dan session lookup tanpa context tenant awal. Fixed search_path, EXECUTE allowlist, validasi caller/input, RLS + real runtime tests; tidak memperluas hak umum atau melemahkan runtime_role_is_valid tanpa review. DB-03 guard harus mengakomodasi hanya capability baru yang disetujui.
+
+Semua path target berikut sudah mencakup public prefix /api/v1 (bukan pengecualian seperti health). API target: GET /api/v1/auth/login → 303 provider; GET /api/v1/auth/callback → 303 route aman hanya jika sukses; GET /api/v1/me → 200 principal/membership minimum/active tenant/revision/csrf_token; POST /api/v1/auth/logout → 204; POST /api/v1/session/tenant → 200 context baru dan csrf_token baru. Error envelope BE-02: 400 malformed callback/login, 401 invalid/expired session atau callback authentication failure, 403 CSRF/tenant denied, 503 dependency unavailable, 429 rate limit. Callback failure selalu no-store tanpa sesi baru. Error code lokal stabil diselesaikan bersama schema endpoint AUTH-02, tanpa provider detail.
+
+AUTH-02 harus menambah rate limiting sebelum exposure: endpoint login dan callback masing-masing mempunyai counter **source IP independen** maksimal 10 request per fixed window 60 detik (request ke-10 boleh, ke-11 ditolak), ditambah counter binding maksimal 10 per 60 detik bila binding sudah ada. Counter bukan composite binding+IP; IP counter tidak direset oleh cookie/binding baru, binding counter tidak direset oleh IP baru. Window mulai pada request pertama, reset setelah 60 detik; cookie baru tidak menghapus bucket. Shared store lintas instance dengan TTL 60 detik, kapasitas 100000 active buckets; storage penuh/unavailable → 503 tanpa login/claim/exchange/rotasi. Gunakan trusted-proxy IP, jangan header IP caller bebas; 429 + Retry-After sisa window. Request callback state asing tetap dihitung IP dan tidak memicu outbound token/JWKS fetch. Distributed IP+binding baru tetap risiko abuse, bukan klaim proteksi DDoS; JWKS refresh mempunyai issuer-global limiter sendiri. Batas ini baseline MVP, bukan klaim capacity/load test.
+
+## 7. Fixture dan acceptance gate
+
+[Fixture SEC-06](../../backend/tests/contracts/identity_protocol_cases.json) berisi synthetic baselines dan delta kasus untuk pelaksana tes AUTH-02. Seluruh expected hasil adalah **spesifikasi, belum actual execution**. Tidak ada signature/key/provider test yang dijalankan oleh JSON tersebut. AUTH-02 harus mengikat tiap ID ke automated assertion pada adapter/HTTP/repository terkait; AUTH-01 review memeriksa kelengkapan/kontradiksi, bukan menghitung kasus ini sebagai tests passed.
+
+SPIKE-01: pilih provider/client/issuer/region dan HTTPS dev callback, verifikasi discovery/JWKS/RS256/S256/client_secret_basic, actual login+callback, sanitized errors/rotation/timeout constraints, tanpa token/PII di bukti. Kalau provider tidak kompatibel, revisi keputusan ini dan fixture sebelum login implementasi diterima. Dengan provider belum ada, rancangan dapat direview tetapi status task tetap menunggu SPIKE-01. Tidak menganggap provider test lokal sebagai integrasi live.
+
+AUTH-02 acceptance: actual provider login, SEC-06 negative fixtures, callback concurrency/replay atomicity, real restricted DB role, session/CSRF/tenant rotation, boundary expiry, distributed persistence/restart, no secret logging dan regresi DB-03. AUTH-01 dibekukan dan ditutup **setelah SPIKE-01 lulus serta review kontrak/settings/fixtures lulus**, sebelum AUTH-02 dimulai. AUTH-02 membuktikan implementasi kontrak beku melalui bukti ini dan QA independen; temuan saat implementasi boleh memicu revisi kontrak terkontrol, bukan prasyarat melingkar penutupan AUTH-01.
+
+## 8. Dasar standar
+
+Protocol validation mengikuti [OIDC Core §3.1.3.7](https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation); flow/redirect/PKCE memakai [OAuth Security BCP RFC 9700](https://www.rfc-editor.org/rfc/rfc9700.html). Kebijakan lifetime, algoritme, batas dan cache di sini adalah keputusan produk, bukan angka wajib standar. Cookie/rotation memakai [OWASP Session Management](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html); synchronizer token dan origin checks memakai [OWASP CSRF Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html).

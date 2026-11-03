@@ -1,0 +1,753 @@
+{
+  "contract_version": 1,
+  "status": "design_only_not_executed",
+  "requirement": "SEC-06",
+  "clock": 1800000000,
+  "baselines": {
+    "id_claims": {
+      "iss": "https://identity.example.test/",
+      "sub": "synthetic-user-a",
+      "aud": "synthetic-client",
+      "iat": 1799999990,
+      "exp": 1800000300,
+      "nonce": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    "callback": {
+      "state_matches": true,
+      "browser_binding_matches": true,
+      "transaction_age_seconds": 299,
+      "consumed": false,
+      "signature_valid": true,
+      "nonce": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    "session": {
+      "age_seconds": 28799,
+      "idle_seconds": 1799,
+      "revoked": false,
+      "principal_active": true,
+      "tenant_active": true,
+      "membership_active": true
+    },
+    "mutation": {
+      "session_valid": true,
+      "origin": "https://app.example.test",
+      "csrf_matches": true,
+      "content_type": "application/json"
+    },
+    "csrf_bootstrap": {
+      "session_valid": true,
+      "bootstrap_header": "1",
+      "fetch_site": "same-origin",
+      "origin": "https://app.example.test"
+    },
+    "limiter": {
+      "requests_in_window": 0,
+      "elapsed_seconds": 0,
+      "store": "available",
+      "active_buckets": 0
+    }
+  },
+  "interpretation": "Each case starts from the relevant valid baseline. changes is a declarative fault or event for the AUTH-02 runner to implement, not a mock verifier response. null for a claim means remove it. Claims are unsigned and never authentication evidence. Expected results are design assertions only.",
+  "cases": [
+    {
+      "id": "SEC-06-001",
+      "layer": "oidc",
+      "changes": {},
+      "expected": "accept_valid_signed_token"
+    },
+    {
+      "id": "SEC-06-002",
+      "layer": "oidc",
+      "changes": {
+        "iss": "https://other.example.test/"
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-003",
+      "layer": "oidc",
+      "changes": {
+        "iss": "https://identity.example.test"
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-004",
+      "layer": "oidc",
+      "changes": {
+        "aud": "other-client"
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-005",
+      "layer": "oidc",
+      "changes": {
+        "signature": "wrong_key"
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-006",
+      "layer": "oidc",
+      "changes": {
+        "alg": "none"
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-007",
+      "layer": "oidc",
+      "changes": {
+        "alg": "HS256"
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-008",
+      "layer": "oidc",
+      "changes": {
+        "nonce": null
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-009",
+      "layer": "oidc",
+      "changes": {
+        "nonce": "another-transaction"
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-010",
+      "layer": "oidc",
+      "changes": {
+        "exp": 1799999940,
+        "iat": 1799999930
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-011",
+      "layer": "oidc",
+      "changes": {
+        "iat": 1800000061
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-012",
+      "layer": "oidc",
+      "changes": {
+        "nbf": 1800000061
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-013",
+      "layer": "oidc",
+      "changes": {
+        "iat": 1799999339
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-014",
+      "layer": "oidc",
+      "changes": {
+        "aud": [
+          "synthetic-client",
+          "other-client"
+        ],
+        "azp": null
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-015",
+      "layer": "oidc",
+      "changes": {
+        "aud": [
+          "synthetic-client",
+          "other-client"
+        ],
+        "azp": "synthetic-client"
+      },
+      "expected": "accept_valid_signed_token"
+    },
+    {
+      "id": "SEC-06-016",
+      "layer": "oidc",
+      "changes": {
+        "azp": "other-client"
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-017",
+      "layer": "oidc",
+      "changes": {
+        "exp": true
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-018",
+      "layer": "oidc",
+      "changes": {
+        "sub": ""
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-019",
+      "layer": "oidc",
+      "changes": {
+        "duplicate_json_claim": "aud"
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-020",
+      "layer": "jwks",
+      "changes": {
+        "kid": "unknown",
+        "refresh": "unavailable"
+      },
+      "expected": "deny_no_session_bounded_refresh"
+    },
+    {
+      "id": "SEC-06-021",
+      "layer": "jwks",
+      "changes": {
+        "kid_matches": 2
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-022",
+      "layer": "jwks",
+      "changes": {
+        "jku": "https://attacker.example.test/jwks"
+      },
+      "expected": "deny_no_egress"
+    },
+    {
+      "id": "SEC-06-023",
+      "layer": "jwks",
+      "changes": {
+        "known_key_cache_age_seconds": 3600,
+        "refresh": "unavailable"
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-024",
+      "layer": "jwks",
+      "changes": {
+        "key_removed_on_successful_refresh": true
+      },
+      "expected": "deny_old_key"
+    },
+    {
+      "id": "SEC-06-025",
+      "layer": "callback",
+      "changes": {
+        "state_matches": false
+      },
+      "expected": "deny_preserve_unrelated_transaction"
+    },
+    {
+      "id": "SEC-06-026",
+      "layer": "callback",
+      "changes": {
+        "browser_binding_matches": false
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-027",
+      "layer": "callback",
+      "changes": {
+        "transaction_age_seconds": 300
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-028",
+      "layer": "callback",
+      "changes": {
+        "consumed": true
+      },
+      "expected": "deny_no_token_exchange"
+    },
+    {
+      "id": "SEC-06-029",
+      "layer": "callback",
+      "changes": {
+        "parallel_callbacks": 2
+      },
+      "expected": "one_claim_at_most_one_session"
+    },
+    {
+      "id": "SEC-06-030",
+      "layer": "callback",
+      "changes": {
+        "duplicate_parameter": "state"
+      },
+      "expected": "deny_no_token_exchange"
+    },
+    {
+      "id": "SEC-06-031",
+      "layer": "callback",
+      "changes": {
+        "code_and_error": true
+      },
+      "expected": "deny_no_token_exchange"
+    },
+    {
+      "id": "SEC-06-032",
+      "layer": "callback",
+      "changes": {
+        "token_exchange": "timeout_after_claim"
+      },
+      "expected": "deny_require_new_login"
+    },
+    {
+      "id": "SEC-06-033",
+      "layer": "callback",
+      "changes": {
+        "pkce_verifier": "wrong"
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-034",
+      "layer": "callback",
+      "changes": {
+        "iss": "https://other.example.test/"
+      },
+      "expected": "deny_no_token_exchange"
+    },
+    {
+      "id": "SEC-06-035",
+      "layer": "redirect",
+      "changes": {
+        "return_to": "https://attacker.example.test"
+      },
+      "expected": "deny_before_authorize"
+    },
+    {
+      "id": "SEC-06-036",
+      "layer": "redirect",
+      "changes": {
+        "return_to": "//attacker.example.test"
+      },
+      "expected": "deny_before_authorize"
+    },
+    {
+      "id": "SEC-06-037",
+      "layer": "redirect",
+      "changes": {
+        "return_to": "tenant_picker"
+      },
+      "expected": "redirect_local_tenants_after_success"
+    },
+    {
+      "id": "SEC-06-038",
+      "layer": "session",
+      "changes": {
+        "age_seconds": 28800
+      },
+      "expected": "401"
+    },
+    {
+      "id": "SEC-06-039",
+      "layer": "session",
+      "changes": {
+        "idle_seconds": 1800
+      },
+      "expected": "401"
+    },
+    {
+      "id": "SEC-06-040",
+      "layer": "session",
+      "changes": {
+        "revoked": true
+      },
+      "expected": "401"
+    },
+    {
+      "id": "SEC-06-041",
+      "layer": "session",
+      "changes": {
+        "principal_active": false
+      },
+      "expected": "401"
+    },
+    {
+      "id": "SEC-06-042",
+      "layer": "session",
+      "changes": {
+        "membership_active": false
+      },
+      "expected": "403_tenant_access_identity_logout_still_allowed"
+    },
+    {
+      "id": "SEC-06-043",
+      "layer": "session",
+      "changes": {
+        "database": "unavailable"
+      },
+      "expected": "503_no_authenticated_action"
+    },
+    {
+      "id": "SEC-06-044",
+      "layer": "mutation",
+      "changes": {
+        "csrf_matches": false
+      },
+      "expected": "403_no_effect"
+    },
+    {
+      "id": "SEC-06-045",
+      "layer": "mutation",
+      "changes": {
+        "origin": null
+      },
+      "expected": "403_no_effect"
+    },
+    {
+      "id": "SEC-06-046",
+      "layer": "mutation",
+      "changes": {
+        "origin": "https://other.example.test"
+      },
+      "expected": "403_no_effect"
+    },
+    {
+      "id": "SEC-06-047",
+      "layer": "mutation",
+      "changes": {
+        "content_type": "text/plain"
+      },
+      "expected": "reject_no_effect"
+    },
+    {
+      "id": "SEC-06-048",
+      "layer": "rotation",
+      "changes": {
+        "event": "tenant_switch",
+        "target_membership": "other_principal"
+      },
+      "expected": "403_no_rotation"
+    },
+    {
+      "id": "SEC-06-049",
+      "layer": "rotation",
+      "changes": {
+        "event": "tenant_switch",
+        "target_membership": "active_own"
+      },
+      "expected": "rotate_revoke_old_preserve_absolute_expiry_no_old_run"
+    },
+    {
+      "id": "SEC-06-050",
+      "layer": "rotation",
+      "changes": {
+        "event": "logout_then_replay_old_cookie"
+      },
+      "expected": "401"
+    },
+    {
+      "id": "SEC-06-051",
+      "layer": "rotation",
+      "changes": {
+        "event": "logout",
+        "database": "unavailable"
+      },
+      "expected": "503_no_revocation_success_claim"
+    },
+    {
+      "id": "SEC-06-052",
+      "layer": "callback",
+      "changes": {
+        "database_commit": "fail_after_token_validation"
+      },
+      "expected": "no_new_session_cookie"
+    },
+    {
+      "id": "SEC-06-053",
+      "layer": "rotation",
+      "changes": {
+        "event": "get_me_twice_then_use_first_csrf"
+      },
+      "expected": "403_no_effect_refetch_required"
+    },
+    {
+      "id": "SEC-06-054",
+      "layer": "callback",
+      "changes": {
+        "event": "restart_between_login_callback"
+      },
+      "expected": "durable_transaction_valid_once"
+    },
+    {
+      "id": "SEC-06-055",
+      "layer": "callback",
+      "changes": {
+        "event": "same_email_different_issuer_subject"
+      },
+      "expected": "no_account_link_no_membership_grant"
+    },
+    {
+      "id": "SEC-06-056",
+      "layer": "logging",
+      "changes": {
+        "event": "callback_provider_error_with_private_input"
+      },
+      "expected": "no_query_token_cookie_or_raw_exception_in_logs"
+    },
+    {
+      "id": "SEC-06-057",
+      "layer": "jwks",
+      "changes": {
+        "unknown_kid_requests_in_one_minute": 1000
+      },
+      "expected": "at_most_one_refresh_bounded_negative_cache"
+    },
+    {
+      "id": "SEC-06-058",
+      "layer": "callback",
+      "changes": {
+        "code_bytes": 4097
+      },
+      "expected": "deny_no_token_exchange"
+    },
+    {
+      "id": "SEC-06-059",
+      "layer": "jwks",
+      "changes": {
+        "response_bytes": 262145
+      },
+      "expected": "deny_keep_previous_valid_cache"
+    },
+    {
+      "id": "SEC-06-060",
+      "layer": "settings",
+      "changes": {
+        "redirect_uri": "http://localhost/auth/callback"
+      },
+      "expected": "invalid_settings_login_disabled"
+    },
+    {
+      "id": "SEC-06-061",
+      "layer": "settings",
+      "changes": {
+        "token_endpoint": "https://unapproved.example.test/token"
+      },
+      "expected": "invalid_settings_no_egress"
+    },
+    {
+      "id": "SEC-06-062",
+      "layer": "session",
+      "changes": {
+        "event": "repeated_get_me_polling"
+      },
+      "expected": "idle_expiry_not_extended"
+    },
+    {
+      "id": "SEC-06-063",
+      "layer": "oidc",
+      "changes": {
+        "exp": 1799999941,
+        "iat": 1799999930
+      },
+      "expected": "accept_valid_signed_token"
+    },
+    {
+      "id": "SEC-06-064",
+      "layer": "oidc",
+      "changes": {
+        "iat": 1800000060,
+        "exp": 1800000300
+      },
+      "expected": "accept_valid_signed_token"
+    },
+    {
+      "id": "SEC-06-065",
+      "layer": "oidc",
+      "changes": {
+        "iat": 1799999340
+      },
+      "expected": "accept_valid_signed_token"
+    },
+    {
+      "id": "SEC-06-066",
+      "layer": "oidc",
+      "changes": {
+        "nbf": 1800000060
+      },
+      "expected": "accept_valid_signed_token"
+    },
+    {
+      "id": "SEC-06-067",
+      "layer": "oidc",
+      "changes": {
+        "iss": null
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-068",
+      "layer": "oidc",
+      "changes": {
+        "sub": null
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-069",
+      "layer": "oidc",
+      "changes": {
+        "aud": null
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-070",
+      "layer": "oidc",
+      "changes": {
+        "exp": null
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-071",
+      "layer": "oidc",
+      "changes": {
+        "iat": null
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-072",
+      "layer": "csrf_bootstrap",
+      "changes": {
+        "fetch_site": "cross-site",
+        "bootstrap_header": "1"
+      },
+      "expected": "403_no_hash_change"
+    },
+    {
+      "id": "SEC-06-073",
+      "layer": "csrf_bootstrap",
+      "changes": {
+        "fetch_site": "same-site",
+        "bootstrap_header": "1"
+      },
+      "expected": "403_no_hash_change"
+    },
+    {
+      "id": "SEC-06-074",
+      "layer": "csrf_bootstrap",
+      "changes": {
+        "fetch_site": "same-origin",
+        "bootstrap_header": null
+      },
+      "expected": "403_no_hash_change"
+    },
+    {
+      "id": "SEC-06-075",
+      "layer": "csrf_bootstrap",
+      "changes": {
+        "fetch_site": null,
+        "bootstrap_header": "1"
+      },
+      "expected": "403_no_hash_change"
+    },
+    {
+      "id": "SEC-06-076",
+      "layer": "csrf_bootstrap",
+      "changes": {
+        "fetch_site": "same-origin",
+        "bootstrap_header": "1",
+        "origin": null
+      },
+      "expected": "rotate_no_idle_extension"
+    },
+    {
+      "id": "SEC-06-077",
+      "layer": "csrf_bootstrap",
+      "changes": {
+        "fetch_site": "same-origin",
+        "bootstrap_header": "1",
+        "origin": "https://other.example.test"
+      },
+      "expected": "403_no_hash_change"
+    },
+    {
+      "id": "SEC-06-078",
+      "layer": "limiter",
+      "changes": {
+        "same_ip_new_bindings_requests": 11,
+        "window_seconds": 60
+      },
+      "expected": "first_10_allowed_11th_429"
+    },
+    {
+      "id": "SEC-06-079",
+      "layer": "limiter",
+      "changes": {
+        "same_binding_new_ips_requests": 11,
+        "window_seconds": 60
+      },
+      "expected": "first_10_allowed_11th_429"
+    },
+    {
+      "id": "SEC-06-080",
+      "layer": "limiter",
+      "changes": {
+        "count": 10,
+        "elapsed_seconds": 60
+      },
+      "expected": "new_window_first_allowed"
+    },
+    {
+      "id": "SEC-06-081",
+      "layer": "limiter",
+      "changes": {
+        "store": "unavailable"
+      },
+      "expected": "503_no_auth_side_effect"
+    },
+    {
+      "id": "SEC-06-082",
+      "layer": "limiter",
+      "changes": {
+        "active_buckets": 100000,
+        "needs_new_bucket": true
+      },
+      "expected": "503_no_auth_side_effect"
+    },
+    {
+      "id": "SEC-06-083",
+      "layer": "limiter",
+      "changes": {
+        "unknown_state_requests": 10
+      },
+      "expected": "deny_no_outbound_token_or_jwks"
+    },
+    {
+      "id": "SEC-06-084",
+      "layer": "csrf_bootstrap",
+      "changes": {
+        "fetch_site": "same-origin",
+        "bootstrap_header": "1",
+        "origin": "null"
+      },
+      "expected": "403_no_hash_change"
+    }
+  ]
+}
