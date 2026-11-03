@@ -1,6 +1,6 @@
 # Backend platform
 
-BE-01 menyediakan paket FastAPI yang dapat diinstal dan dijalankan. BE-02 menambahkan health/readiness bootstrap, error envelope, request ID dan batas input. BE-03 memasang composition root, health service/ports dan dependency wiring. DB-01 menyediakan koneksi PostgreSQL opsional dan telah lulus tes offline/live serta QA independen. DB-02 menyediakan foundation identity/config migration yang sudah terpasang. Schema fitur bisnis, RLS, autentikasi, RAG, worker, dan endpoint reimbursement belum tersedia.
+BE-01 menyediakan paket FastAPI yang dapat diinstal dan dijalankan. BE-02 menambahkan health/readiness bootstrap, error envelope, request ID dan batas input. BE-03 memasang composition root, health service/ports dan dependency wiring. DB-01 menyediakan koneksi PostgreSQL opsional dan telah lulus tes offline/live serta QA independen. DB-02 menyediakan foundation identity/config migration yang sudah terpasang. DB-03 memasang role runtime terbatas, context transaksi dan RLS fondasi. Schema fitur bisnis, autentikasi, RAG, worker, dan endpoint reimbursement belum tersedia.
 
 ## Persiapan
 
@@ -126,7 +126,7 @@ Rujukan teknis: [psycopg async/Windows](https://www.psycopg.org/psycopg3/docs/ad
 
 ## Migration dan foundation schema DB-02
 
-Status: **selesai dan lulus QA**, 166 tes termasuk dua integrasi live lulus; schema aplikasi pada revision 0002. Wheel bersih dan 40 pemeriksaan migration live juga lulus. Bukti pada [hasil DB-02](../docs/backend/task_plan.md#15-hasil-pelaksanaan-db-02). Migration tidak dijalankan saat API startup. Gunakan Python/uv terkunci dari root repository; command hanya memuat `DATABASE_DIRECT_URL` secara internal, tanpa membutuhkan runtime URL.
+Status: **selesai dan lulus QA**, 166 tes termasuk dua integrasi live lulus; DB-02 diterima pada revision 0002; head aplikasi kini 0003 melalui DB-03. Wheel bersih dan 40 pemeriksaan migration live juga lulus. Bukti pada [hasil DB-02](../docs/backend/task_plan.md#15-hasil-pelaksanaan-db-02). Migration tidak dijalankan saat API startup. Gunakan Python/uv terkunci dari root repository; command hanya memuat `DATABASE_DIRECT_URL` secara internal, tanpa membutuhkan runtime URL.
 
 ```powershell
 python -m uv run --locked --project backend enterprise-ai-migrate status --env-file .env
@@ -147,3 +147,47 @@ Timezone allowlist versi 1: `Asia/Jakarta`, `Asia/Singapore`, `UTC`, ditegakkan 
 Role memiliki allowlist enam nilai kontrak. `scope_kind`/`scope_ref` sementara hanya penyimpanan bounded; vocabulary/otorisasi scope wajib dikunci sebelum AUTH-03. Scope tak dikenal tidak boleh memberi izin. Hash token/CSRF disimpan sebagai teks bounded, tanpa memilih algoritme/lifetime sebelum AUTH-01. Tabel security policy menyimpan snapshot/draft dan struktur dasar JSON; kategori, validasi semantik processing policy, residency/retention lengkap dan activation gate tetap DATA-01. Foreign key sesi membuktikan relasi membership, bukan membership masih aktif; login/expiry/revoke checks tetap tugas AUTH.
 
 **DB-02 belum meluluskan RLS, least privilege runtime, actor/tenant context, self-escalation rules, login atau fitur bisnis.** Itu DB-03/AUTH dan tugas fitur berikutnya. Jangan memakai schema fondasi untuk data sensitif sebelum kontrol tersebut selesai. Panduan menambah revision ada di [migration sources](migrations/README.md).
+
+## Runtime identity, context dan RLS DB-03
+
+Status: **selesai, terpasang pada revision 0003 dan lulus QA**. Suite lengkap **189 tes lulus**, termasuk tiga integrasi live. Wheel bersih memuat tiga revision SQL; 186 tes offline serta 40 migration checks dan 55 security checks live lulus. Bukti pada [hasil DB-03](../docs/backend/task_plan.md#16-hasil-pelaksanaan-db-03). PostgreSQL **16 atau lebih baru** diperlukan untuk membership `INHERIT TRUE, SET FALSE, ADMIN FALSE`.
+
+Revision 0003 membuat access role NOLOGIN tanpa kepemilikan objek, registry role private (name+OID), serta ENABLE/FORCE RLS pada tabel identity/config private dan ledger. Policy runtime ditujukan ke access role khusus, bukan PUBLIC. Migration identity memiliki maintenance policy eksplisit; ia merupakan trusted administrator, bukan credential API. Helper SECURITY DEFINER hanya mengembalikan boolean, memakai qualified objects/fixed pg_catalog search_path, dan EXECUTE default PUBLIC dicabut. Runtime tidak dapat menjalankan private privilege-preflight helper.
+
+Runtime LOGIN tidak mempunyai SUPERUSER/BYPASSRLS/CREATEROLE/CREATEDB/REPLICATION atau kepemilikan objek. Satu-satunya membership adalah access role yang direkam, dengan INHERIT TRUE dan SET/ADMIN FALSE; NOINHERIT pada atribut login tetap dipertahankan. Guard memeriksa hak efektif tabel **dan kolom**, grant options, fungsi, sequences, schema/database CREATE, ownership serta jalur membership. Akses ke sessions, security policies, ledger dan registry tidak diberikan. Database CONNECT diberikan eksplisit; default PostgreSQL PUBLIC TEMP dibiarkan tanpa perubahan database-wide. Objek temp tidak menjadi jalur ke helper karena seluruh referensinya qualified. Guard menolak ownership objek runtime/access role; aplikasi tidak membuat objek temporary/persistent sendiri.
+
+| Data | Hak runtime foundation |
+| --- | --- |
+| principals | SELECT identitas actor sendiri ketika context/membership/principal/tenant aktif |
+| tenants, tenant_configs | SELECT tenant dalam context yang sah |
+| memberships, membership_roles | SELECT membership/role actor sendiri dalam tenant context |
+| timezone_catalog | SELECT allowlist global yang tidak berisi data pengguna |
+| sessions, security_policy_configs, schema_migrations, registry | Tidak ada akses tabel umum |
+| Mutasi foundation, TRUNCATE, policy/helper/schema DDL | Tidak diberikan; policy runtime foundation juga SELECT-only |
+
+Menambahkan ACL write saja tidak membuka perubahan akun/role: AUTH harus menyediakan operasi scoped dan policy yang direview. Probe memakai tabel fitur sementara dengan `USING/WITH CHECK` untuk menguji writes tenant/owner; grant itu hanya berada di schema uji, bukan tabel foundation aplikasi.
+
+`TenantActorContext(tenant_id: UUID, actor_id: UUID)` berasal dari backend identity/policy yang tepercaya. `RuntimeDatabase.transaction(context)` memasang kedua UUID menggunakan transaction-local `set_config(..., true)`; tanpa context keduanya disetel kosong. Context tidak disimpan pada resource/global dan tidak diambil dari header/body publik. RLS memeriksa principal, tenant, dan membership masih aktif. Missing/invalid/partial context fail closed. Context hilang pada commit/rollback; failure/cancel/deadline membuang koneksi tidak pasti, dan checkout berikutnya memasang context baru atau kosong.
+
+**Context bukan autentikasi.** Pemegang credential SQL runtime masih bisa mengirim GUC sendiri; AUTH harus membuktikan actor dan tenant sebelum adapter dipanggil. Model/agent/browser tidak memperoleh credential atau SQL tool. Ini fondasi isolasi DB, bukan kelulusan login, seluruh object policy, atau keamanan produk penuh.
+
+Perintah dari root repository:
+
+```powershell
+# Probe live terisolasi: membuat role/schema acak dan data tenant fiktif, lalu membersihkan semuanya.
+python -m uv run --locked --project backend enterprise-ai-security verify --env-file .env
+# Setelah migration 0003 diterima dan diterapkan, buat serta verifikasi LOGIN terbatas.
+python -m uv run --locked --project backend enterprise-ai-security provision --env-file .env
+# Periksa credential runtime lokal melalui login sungguhan dan guard privilege.
+python -m uv run --locked --project backend enterprise-ai-security check --env-file .env
+```
+
+Provisioning hanya memakai direct credential secara internal. Nama/OID existing yang tidak cocok registry tidak diadopsi. Guard privilege managed role dijalankan sebelum password atau grant lama diubah. Pengulangan normal mempertahankan password yang masih valid; tidak merotasi otomatis. LOGIN baru diverifikasi sungguhan sebelum hanya `DATABASE_URL` di `.env` ditulis melalui atomic replacement. `DATABASE_DIRECT_URL` dan pilihan `APP_DATABASE_ENABLED` tetap utuh. DATABASE_URL dari process environment dan perubahan file bersamaan menahan provisioning agar tidak menimpa konfigurasi pengguna.
+
+DB dan file lokal bukan satu transaksi. Jika pembuatan role berhasil tetapi penyimpanan lokal gagal, setelah memperbaiki akses file gunakan recovery **eksplisit** berikut. Ia memvalidasi registry serta privilege terlebih dahulu, kemudian merotasi hanya LOGIN milik proyek dan menyimpan credential lokal yang baru:
+
+```powershell
+python -m uv run --locked --project backend enterprise-ai-security provision --rotate --env-file .env
+```
+
+Jangan gunakan recovery untuk role dengan privilege tak aman; preflight menolak sebelum credential diubah. Provision bukan bagian startup atau perintah rutin deploy. Neon memerlukan input password plaintext melalui SQL; input dikirim hanya lewat TLS verify-full, tidak dikembalikan lewat CLI/log/chat. Role dibuat melalui SQL agar tidak otomatis mendapat neon_superuser. Rujukan: [Neon role management](https://neon.com/docs/manage/roles), [PostgreSQL role membership](https://www.postgresql.org/docs/16/role-membership.html), [row security](https://www.postgresql.org/docs/17/ddl-rowsecurity.html).

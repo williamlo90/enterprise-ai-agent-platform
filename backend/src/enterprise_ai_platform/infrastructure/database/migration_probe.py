@@ -9,6 +9,7 @@ from psycopg.types.json import Jsonb
 
 from enterprise_ai_platform.infrastructure.database.connection import bounded_transaction, direct_connection
 from enterprise_ai_platform.infrastructure.database.migration import MigrationError, Revision, migrate, revisions
+from enterprise_ai_platform.infrastructure.database.roles import drop_probe_schema
 
 
 class VerificationFailure(RuntimeError):
@@ -23,6 +24,7 @@ def require(condition, case):
 
 async def verify_migrations(target) -> int:
     completed = []
+    head = len(revisions())
     owned = []
     stage = "initialization"
 
@@ -58,7 +60,7 @@ async def verify_migrations(target) -> int:
     try:
         schema = await new_schema()
         stage = "read-only-status"
-        require(await migrate(target, schema=schema) == (0, 2), stage)
+        require(await migrate(target, schema=schema) == (0, head), stage)
         async with direct_connection(target) as connection:
             cursor = await connection.execute("SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname=%s", (schema,))
             require(await cursor.fetchone() is None, stage)
@@ -91,12 +93,12 @@ async def verify_migrations(target) -> int:
         completed.append(stage)
 
         stage = "filled-upgrade-to-head"
-        require(await migrate(target, schema=schema, upgrade=True) == (2, 2), stage)
+        require(await migrate(target, schema=schema, upgrade=True) == (head, head), stage)
         async with direct_connection(target) as connection:
             require(await (await connection.execute(query("SELECT count(*) FROM {s}.tenant_configs", schema))).fetchone() == (2,), stage)
         completed.append(stage)
         stage = "replay-upgrade"
-        require(await migrate(target, schema=schema, upgrade=True) == (2, 2), stage)
+        require(await migrate(target, schema=schema, upgrade=True) == (head, head), stage)
         completed.append(stage)
 
         # Deferred FK must fail when the transaction commits, not on INSERT.
@@ -178,9 +180,9 @@ async def verify_migrations(target) -> int:
         completed.append(stage)
 
         stage = "failed-upgrade-rollback"
-        bad = (*revisions(), Revision(3, "0003_failure.sql", "CREATE TABLE {schema}.must_rollback (id integer); SELECT 1 / 0;"))
+        bad = (*revisions(), Revision(head + 1, f"{head + 1:04d}_failure.sql", "CREATE TABLE {schema}.must_rollback (id integer); SELECT 1 / 0;"))
         await expect_migration_failure(schema, bad)
-        require(await migrate(target, schema=schema) == (2, 2), stage)
+        require(await migrate(target, schema=schema) == (head, head), stage)
         async with direct_connection(target) as connection:
             cursor = await connection.execute("SELECT to_regclass(%s)", (schema + ".must_rollback",))
             require(await cursor.fetchone() == (None,), stage)
@@ -189,7 +191,7 @@ async def verify_migrations(target) -> int:
         stage = "failed-initial-migration-rollback"
         empty = await new_schema()
         await expect_migration_failure(empty, bad)
-        require(await migrate(target, schema=empty) == (0, 2), stage)
+        require(await migrate(target, schema=empty) == (0, head), stage)
         completed.append(stage)
 
         stage = "unmanaged-schema-empty-ledger"
@@ -214,7 +216,7 @@ async def verify_migrations(target) -> int:
         async with asyncio.TaskGroup() as group:
             first = group.create_task(migrate(target, schema=concurrent, upgrade=True))
             second_run = group.create_task(migrate(target, schema=concurrent, upgrade=True))
-        require(first.result() == second_run.result() == (2, 2), stage)
+        require(first.result() == second_run.result() == (head, head), stage)
         completed.append(stage)
     except VerificationFailure:
         raise
@@ -224,8 +226,7 @@ async def verify_migrations(target) -> int:
         cleanup_failed = False
         for name in owned:
             try:
-                async with direct_connection(target) as connection:
-                    await connection.execute(sql.SQL("DROP SCHEMA IF EXISTS {} CASCADE").format(sql.Identifier(name)))
+                await drop_probe_schema(target, name)
             except Exception:
                 cleanup_failed = True
         if cleanup_failed:

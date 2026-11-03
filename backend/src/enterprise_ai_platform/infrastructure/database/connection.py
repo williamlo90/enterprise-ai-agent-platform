@@ -1,4 +1,4 @@
-"""Bounded PostgreSQL transactions. No tenant context or business schema yet."""
+"""Bounded PostgreSQL transactions with backend-owned tenant/actor context."""
 
 import asyncio
 import logging
@@ -10,7 +10,10 @@ from urllib.parse import parse_qsl, unquote, urlsplit
 
 import certifi
 import psycopg
+from psycopg import sql
 from psycopg_pool import AsyncConnectionPool
+
+from enterprise_ai_platform.modules.identity.domain import TenantActorContext
 
 
 class DatabaseUnavailable(RuntimeError):
@@ -140,11 +143,16 @@ async def finish_cleanup(awaitable):
 
 class RuntimeDatabase:
     def __init__(self, target: ConnectionTarget, *, limits: DatabaseLimits | None = None,
-                 pool_factory=AsyncConnectionPool):
+                 pool_factory=AsyncConnectionPool, schema: str = "platform", max_size: int = 2):
+        if schema != "platform" and not re.fullmatch(r"db03_probe_[a-f0-9]{32}", schema):
+            raise DatabaseConfigurationError()
+        if type(max_size) is not int or not 1 <= max_size <= 2:
+            raise DatabaseConfigurationError()
         install_safe_database_logging()
+        self.schema = schema
         self.limits = limits or DatabaseLimits()
         self.pool = pool_factory(
-            conninfo="", kwargs=target.kwargs(), open=False, min_size=0, max_size=2,
+            conninfo="", kwargs=target.kwargs(), open=False, min_size=0, max_size=max_size,
             max_waiting=8, timeout=self.limits.checkout_seconds, reconnect_timeout=5,
             check=AsyncConnectionPool.check_connection, name="platform-runtime",
         )
@@ -156,6 +164,11 @@ class RuntimeDatabase:
                 # min_size=0: pool.wait() alone is not proof of connectivity.
                 async with self.transaction() as connection:
                     await verify_tls(connection)
+                    cursor = await connection.execute(sql.SQL(
+                        "SELECT current_user=session_user, {}.runtime_role_is_valid()"
+                    ).format(sql.Identifier(self.schema)))
+                    if await cursor.fetchone() != (True, True):
+                        raise DatabaseUnavailable()
         except asyncio.CancelledError:
             await self.close()
             raise
@@ -198,7 +211,9 @@ class RuntimeDatabase:
             raise DatabaseUnavailable() from None
 
     @asynccontextmanager
-    async def transaction(self):
+    async def transaction(self, context: TenantActorContext | None = None):
+        if context is not None and not isinstance(context, TenantActorContext):
+            raise ValueError("A backend tenant/actor context is required.")
         connection = None
         discard = False
         try:
@@ -209,8 +224,12 @@ class RuntimeDatabase:
                     await connection.execute(
                         "SELECT set_config('statement_timeout', %s, true), "
                         "set_config('lock_timeout', %s, true), "
-                        "set_config('idle_in_transaction_session_timeout', %s, true)",
-                        (str(self.limits.statement_ms), str(self.limits.lock_ms), str(self.limits.idle_ms)),
+                        "set_config('idle_in_transaction_session_timeout', %s, true), "
+                        "set_config('app.tenant_id', %s, true), "
+                        "set_config('app.actor_id', %s, true)",
+                        (str(self.limits.statement_ms), str(self.limits.lock_ms), str(self.limits.idle_ms),
+                         "" if context is None else str(context.tenant_id),
+                         "" if context is None else str(context.actor_id)),
                     )
                     yield connection
         except asyncio.CancelledError:

@@ -1,6 +1,6 @@
 # Repository layout
 
-Status: struktur repository telah direview QA. BE-01/02 menyediakan package API/config dan HTTP boundary; BE-03 menambahkan composition root, modul system health, runtime readiness adapter dan guard import. DB-01 menambahkan infrastructure/database/connection.py, infrastructure/database_probe.py dan CLI database_check.py; uji offline/live dan QA independen lulus. Folder fitur lain tetap menyiapkan implementasi. DB-02 runner/SQL foundation migration sudah terpasang pada revision 0002 dan lulus QA. Fitur bisnis dan deployment belum executable.
+Status: struktur repository telah direview QA. BE-01/02 menyediakan package API/config dan HTTP boundary; BE-03 menambahkan composition root, modul system health, runtime readiness adapter dan guard import. DB-01 menambahkan infrastructure/database/connection.py, infrastructure/database_probe.py dan CLI database_check.py; uji offline/live dan QA independen lulus. Folder fitur lain tetap menyiapkan implementasi. DB-02 runner/SQL foundation migration sudah terpasang pada revision 0002 dan lulus QA. DB-03 menambahkan identity/domain.py untuk context, roles.py, security_probe.py, security_cli.py dan migration 0003; pemasangan dan QA selesai. Fitur bisnis dan deployment belum executable.
 
 Empat dokumen kontrak tetap di root. Struktur mengikuti [ARCHITECTURE.md](../ARCHITECTURE.md) dan tidak mengubah scope produk.
 
@@ -56,9 +56,12 @@ enterprise-ai-agent-platform/
 │   │       │   ├── connection.py
 │   │       │   ├── migration.py
 │   │       │   ├── migration_probe.py
+│   │       │   ├── roles.py
+│   │       │   ├── security_probe.py
 │   │       │   └── migrations/
 │   │       │       ├── 0001_foundation.sql
-│   │       │       └── 0002_foundation_indexes.sql
+│   │       │       ├── 0002_foundation_indexes.sql
+│   │       │       └── 0003_runtime_isolation.sql
 │   │       ├── database_probe.py
 │   │       ├── checkpoints/
 │   │       ├── jobs/

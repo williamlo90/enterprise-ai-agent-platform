@@ -11,17 +11,17 @@ from enterprise_ai_platform.composition import database_loop_factory
 from enterprise_ai_platform.config import MigrationSettings, load_settings
 from enterprise_ai_platform.infrastructure.database import migration
 from enterprise_ai_platform.infrastructure.database.connection import parse_target
-from enterprise_ai_platform.infrastructure.database.migration import MigrationError, Revision, revisions, validate_history, validate_revisions
+from enterprise_ai_platform.infrastructure.database.migration import MigrationError, Revision, revisions, validate_history, validate_revisions, revision_sql
 
 
 def test_packaged_revisions_have_contiguous_history_and_renderable_identifiers():
     items = revisions()
-    assert [item.version for item in items] == [1, 2]
-    assert [item.name for item in items] == ["0001_foundation.sql", "0002_foundation_indexes.sql"]
+    assert [item.version for item in items] == [1, 2, 3]
+    assert [item.name for item in items] == ["0001_foundation.sql", "0002_foundation_indexes.sql", "0003_runtime_isolation.sql"]
     for item in items:
         assert len(item.checksum) == 64
-        rendered = sql.SQL(item.source).format(schema=sql.Identifier('synthetic-schema')).as_string()
-        assert '"synthetic-schema".' in rendered
+        rendered = revision_sql(item, "platform").as_string()
+        assert '"platform".' in rendered
         assert "{schema}" not in rendered
     assert "DEFERRABLE INITIALLY DEFERRED" in items[0].source
     assert "ON DELETE CASCADE" not in items[0].source
@@ -44,7 +44,7 @@ def test_ledger_must_be_an_exact_prefix(case):
     elif case == "gap":
         history = history[1:]
     elif case == "unknown":
-        history.append((3, "foreign", "0" * 64))
+        history.append((len(items) + 1, "foreign", "0" * 64))
     elif case == "name":
         history[0] = (1, "foreign", items[0].checksum)
     else:
@@ -55,7 +55,7 @@ def test_ledger_must_be_an_exact_prefix(case):
 
 def test_empty_partial_and_full_history_are_valid():
     items = revisions()
-    for size in range(3):
+    for size in range(len(items) + 1):
         validate_history([(item.version, item.name, item.checksum) for item in items[:size]], items)
 
 
@@ -105,7 +105,7 @@ def invoke(monkeypatch, connection, **kwargs):
 
 def test_status_is_read_only_and_never_creates_schema(monkeypatch):
     connection = Connection()
-    assert invoke(monkeypatch, connection) == (0, 2)
+    assert invoke(monkeypatch, connection) == (0, 3)
     text = "\n".join(item[0] for item in connection.commands)
     assert "READ ONLY" in text
     assert "CREATE" not in text
@@ -115,7 +115,7 @@ def test_status_is_read_only_and_never_creates_schema(monkeypatch):
 
 def test_lock_precedes_history_and_all_pending_sql_and_ledger_share_transaction(monkeypatch):
     connection = Connection()
-    assert invoke(monkeypatch, connection, upgrade=True) == (2, 2)
+    assert invoke(monkeypatch, connection, upgrade=True) == (3, 3)
     statements = [item[0] for item in connection.commands]
     lock = next(i for i, value in enumerate(statements) if "pg_advisory_xact_lock" in value)
     history = next(i for i, value in enumerate(statements) if "SELECT EXISTS" in value)

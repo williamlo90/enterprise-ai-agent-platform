@@ -1,6 +1,6 @@
 # Database schema
 
-Status: spesifikasi schema PostgreSQL. DB-01 koneksi telah lulus QA; DB-02 foundation migration 0001/0002 sudah terpasang dan lulus QA kode, wheel dan database nyata. Tabel fitur setelah identity/config masih rancangan. Acuan [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), [backend architecture](architecture.md), dan [task plan](task_plan.md). Schema ini memperinci model logis, bukan mengganti pemilik data atau scope produk.
+Status: spesifikasi schema PostgreSQL. DB-01 koneksi telah lulus QA; DB-02 foundation migration 0001/0002 sudah terpasang dan lulus QA kode, wheel dan database nyata. DB-03 role/context/RLS dan registry role sudah terpasang pada revision 0003 serta lulus QA. Tabel fitur setelah identity/config masih rancangan. Acuan [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), [backend architecture](architecture.md), dan [task plan](task_plan.md). Schema ini memperinci model logis, bukan mengganti pemilik data atau scope produk.
 
 ## 1. Konvensi dan jenis relasi
 
@@ -142,6 +142,14 @@ Indeks PK/FK ditambah workload indexes owner/time, claim state/active stage, mes
 Urutan migration bertahap: (1) tenant/identity/session/config; (2) files/knowledge/ACL; (3) conversations/runs/checkpoints; (4) packages/drafts/action snapshots/jobs; service punya history terpisah: packages/trips → claims/revisions/stages/reservations → operations/audit. Urutan logis menyesuaikan FK nyata: audit/ledger dan parents yang dibutuhkan dibuat sebelum child feature memakai FK; circular pointers ditambah setelah semua tabel tersedia dan diisi atomik. Tidak menerapkan seluruh schema masa depan pada tugas koneksi DB pertama.
 
 Migration diuji empty→head, previous revision→head dengan data fiktif, constraint negatif/cross-tenant, rollback kegagalan migration, RLS runtime, resource packaging wheel, dan replay upgrade. Expand/contract untuk perubahan kolom dan retention; rollback aplikasi tidak diasumsikan undo destructive SQL. Sensitive data belum dipakai sebelum retensi/residency ditetapkan.
+
+### Implementasi DB-03
+
+Revision 0003 menambahkan `runtime_access_role_registry` dan `runtime_role_registry`, masing-masing singleton berisi role_name/name dan role_oid/OID unik dengan created_at. Runtime tidak dapat membaca/menulis registry. Registry mengikat identitas role, bukan sekadar nama yang bisa dibuat ulang. Access role NOLOGIN tidak memiliki objek atau membership lain; LOGIN hanya mewarisi role tersebut, tanpa SET/ADMIN.
+
+RLS enabled+forced pada principals, tenants, memberships, membership_roles, tenant_configs, security_policy_configs, sessions, schema_migrations dan kedua registry. Policy migration maintenance eksplisit terpisah dari policy runtime SELECT-only. Runtime membaca principal/membership/role sendiri dan tenant/config yang sesuai context aktif; sessions/security policy/ledger/registry tanpa grant runtime. Timezone catalog adalah metadata global read-only. Mutation foundation menunggu scoped AUTH paths. Checks USING/WITH CHECK untuk mutasi diuji pada tabel fitur disposable yang tidak dipasang ke schema aplikasi.
+
+`context_tenant_id`, `context_actor_id`, `has_active_context` dan wrapper `runtime_role_is_valid` adalah helper terbatas. Private `_runtime_role_is_valid(candidate oid)` hanya dapat dipanggil migrator untuk preflight sebelum perubahan credential; wrapper runtime memeriksa SESSION_USER aktual. Seluruh fungsi menggunakan fixed search_path dan qualified references. Role guard meliputi privilege efektif tabel/kolom/grant option/function/sequence, flag administratif, ownership, dan membership. Semantik identity/login, scope sensitif dan policy fitur tetap mengikuti AUTH serta task fitur. Panduan operasi dan trust boundary pada [backend README](../../backend/README.md#runtime-identity-context-dan-rls-db-03).
 
 ## 10. Journal dan parameter yang belum dibekukan
 

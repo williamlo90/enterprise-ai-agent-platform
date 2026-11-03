@@ -6,9 +6,9 @@ The initial product combines a bilingual travel-policy assistant with reimbursem
 
 ## Project status
 
-BE-01 through BE-03 are complete and QA-reviewed, with 91 passing tests including clean wheel installation. The API provides health/readiness, consistent errors, request IDs, bounded input handling, and application-local service/port wiring with architecture checks. Business features are not implemented. See [backend setup](backend/README.md).
+The API foundation provides health/readiness, consistent errors, request IDs, bounded input handling, and application-local service/port wiring. PostgreSQL migrations are applied through revision **0003**, with a separate restricted runtime login, transaction-local tenant/actor context, and row-level security on identity/config data.
 
-DB-01 is complete and independently QA-reviewed: 139 offline tests and 1 live Neon integration test passed. The PostgreSQL foundation includes pooled runtime/direct migration connections, TLS verification, bounded transactions and cancellation cleanup. DB-02 adds packaged, versioned migrations and an identity/config foundation, applied through revision 0002. All 166 tests pass, including two live database integrations, with independent QA and clean wheel verification. Tenant access enforcement follows in DB-03.
+**189 tests pass**, including three live database integrations. Independent QA, clean wheel installation, 40 migration checks and 55 runtime isolation checks passed. Authentication and business workflows remain planned. See [backend setup](backend/README.md) and [delivery evidence](docs/backend/task_plan.md).
 
 ## Planned MVP
 

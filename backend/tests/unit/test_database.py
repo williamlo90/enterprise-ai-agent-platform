@@ -38,6 +38,8 @@ class FakeConnection:
         self.rows = (1,)
         self.pgconn = SimpleNamespace(ssl_in_use=True)
         self.exit_delay = 0
+        self.last_query = ""
+        self.role_valid = (True, True)
 
     @asynccontextmanager
     async def transaction(self):
@@ -54,10 +56,11 @@ class FakeConnection:
 
     async def execute(self, query, params=None):
         self.events.append((query, params))
+        self.last_query = query if isinstance(query, str) else query.as_string()
         return self
 
     async def fetchone(self):
-        return self.rows
+        return self.role_valid if "runtime_role_is_valid" in self.last_query else self.rows
 
     async def close(self):
         self.closed = True
@@ -176,7 +179,7 @@ def test_success_commits_and_exception_rolls_back_and_returns_connection():
         assert connection.events[-1] == "commit"
         settings_query, values = connection.events[1]
         assert "true" in settings_query
-        assert values == ("5000", "2000", "10000")
+        assert values == ("5000", "2000", "10000", "", "")
         with pytest.raises(ValueError, match="business failure"):
             async with db.transaction():
                 raise ValueError("business failure")

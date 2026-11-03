@@ -10,8 +10,11 @@ root with `--env-file .env`. See [backend instructions](../README.md#migration-d
 packaged revision chain to the application schema `platform`.
 
 Append a contiguous `NNNN_name.sql` revision; never edit an applied revision.
-These are psycopg SQL templates: `{schema}` is the only placeholder, and literal
-braces must be doubled. Use qualified objects and transactional SQL. Do not
+These are psycopg SQL templates: `{schema}` and the runner's deterministic
+`{access_role}` are identifier placeholders; literal braces must be doubled.
+Revision 0003 requires PostgreSQL 16+ and CREATEROLE for its restricted NOLOGIN
+access role. LOGIN credentials are provisioned separately, not stored in SQL.
+Use qualified objects and transactional SQL. Do not
 include BEGIN/COMMIT, ROLLBACK, connection changes, nontransactional operations
 or external I/O. Review new revisions and exercise failure rollback before
 deployment. Checksums detect changed history; there is no stamp, repair-history

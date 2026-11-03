@@ -1,6 +1,6 @@
 # Data and API Contracts — Enterprise AI Agent Platform
 
-Status: kontrak desain. Fondasi koneksi DB-01 telah lulus QA; implementasi migration identity/config DB-02 dan status verifikasinya dicatat pada docs/backend/task_plan.md. API/fitur lain tetap rancangan sampai tugas terkait diterima. Turunan [PRODUCT_CONTRACT.md](PRODUCT_CONTRACT.md) §3–6; komponen pada [ARCHITECTURE.md](ARCHITECTURE.md), kasus uji pada [TEST_PLAN.md](TEST_PLAN.md). Aturan produk mengungguli detail teknis; perubahan perilaku produk memerlukan penyelarasan keempat file.
+Status: kontrak desain. Fondasi koneksi DB-01 telah lulus QA; migration identity/config DB-02 serta runtime role/context/RLS DB-03 telah diuji dan dicatat pada docs/backend/task_plan.md. AUTH dan otorisasi fitur tetap tugas berikutnya. API/fitur lain tetap rancangan sampai tugas terkait diterima. Turunan [PRODUCT_CONTRACT.md](PRODUCT_CONTRACT.md) §3–6; komponen pada [ARCHITECTURE.md](ARCHITECTURE.md), kasus uji pada [TEST_PLAN.md](TEST_PLAN.md). Aturan produk mengungguli detail teknis; perubahan perilaku produk memerlukan penyelarasan keempat file.
 
 ## 1. Konvensi dan invariant
 
@@ -89,7 +89,7 @@ Canonical request hash mencakup jenis operasi, tenant/actor yang telah diverifik
 
 ### Baseline HTTP yang diimplementasikan pada BE-02
 
-Health berada di luar prefix bisnis: `GET /health/live` memberi 200 `{status:ok,scope:process}`; `GET /health/ready` memberi 200 `{status:ready,scope:bootstrap}` setelah lifecycle startup dan 503 envelope saat belum siap. Kesiapan bootstrap belum menguji DB/model/identity/storage; dependency minimum ditambahkan saat tersedia.
+Health berada di luar prefix bisnis: `GET /health/live` memberi 200 `{status:ok,scope:process}`; `GET /health/ready` memberi 200 `{status:ready,scope:bootstrap}` setelah lifecycle startup dan 503 envelope saat belum siap. Jika database diaktifkan, startup memverifikasi restricted runtime login dan readiness memeriksa koneksi DB. Model/identity/storage serta kesiapan fitur bisnis belum diuji oleh probe bootstrap.
 
 Server menerbitkan UUID request baru dan mengirim `X-Request-ID`, mengabaikan input ID klien; body error memakai ID yang sama. Error memakai pesan/code aman tanpa input atau detail exception bebas. Malformed JSON 400, validasi input 422, oversize 413, deadline body 408, unhandled failure 500. `retryable` true hanya untuk 408/429/503 pada baseline; flag bukan izin mengulang tindakan bisnis dengan key baru. Respons HTTP yang ditolak parser/server sebelum ASGI di luar envelope aplikasi.
 

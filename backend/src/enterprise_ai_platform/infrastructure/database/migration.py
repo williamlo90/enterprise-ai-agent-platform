@@ -13,6 +13,18 @@ from enterprise_ai_platform.infrastructure.database.connection import Connection
 DEFAULT_SCHEMA = "platform"
 
 
+def access_role(schema: str) -> str:
+    if schema == DEFAULT_SCHEMA:
+        return "enterprise_ai_platform_access"
+    if re.fullmatch(r"db0[23]_probe_[a-f0-9]{32}", schema):
+        return "eai_access_" + schema.rsplit("_", 1)[1]
+    raise MigrationError()
+
+
+def revision_sql(item: "Revision", schema: str):
+    return sql.SQL(item.source).format(schema=sql.Identifier(schema), access_role=sql.Identifier(access_role(schema)))
+
+
 class MigrationError(RuntimeError):
     def __init__(self):
         super().__init__("Migration state or operation is invalid.")
@@ -89,7 +101,7 @@ async def migrate(target: ConnectionTarget, *, upgrade: bool = False,
     if type(head) is not int or not 0 <= head <= len(items):
         raise MigrationError()
     # Keep tests/internal callers from selecting system or foreign schemas.
-    if schema != DEFAULT_SCHEMA and not re.fullmatch(r"db02_probe_[a-f0-9]{32}", schema):
+    if schema != DEFAULT_SCHEMA and not re.fullmatch(r"db0[23]_probe_[a-f0-9]{32}", schema):
         raise MigrationError()
     lock_key = int.from_bytes(sha256(("enterprise-ai:" + schema).encode()).digest()[:8], "big", signed=True)
     try:
@@ -122,7 +134,7 @@ async def migrate(target: ConnectionTarget, *, upgrade: bool = False,
                         "checksum text NOT NULL CHECK(checksum ~ '^[a-f0-9]{{64}}$'), "
                         "applied_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP)").format(ident))
                 for item in items[current:head]:
-                    await connection.execute(sql.SQL(item.source).format(schema=ident), prepare=False)
+                    await connection.execute(revision_sql(item, schema), prepare=False)
                     await connection.execute(sql.SQL(
                         "INSERT INTO {}.schema_migrations (version,name,checksum) VALUES (%s,%s,%s)"
                     ).format(ident), (item.version, item.name, item.checksum))
