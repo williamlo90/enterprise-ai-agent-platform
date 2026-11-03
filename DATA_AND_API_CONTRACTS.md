@@ -87,6 +87,14 @@ Status utama: 200/201 hasil terverifikasi, 202 pekerjaan diterima, 400 payload i
 
 Canonical request hash mencakup jenis operasi, tenant/actor yang telah diverifikasi, versi draf/claim, policy digest, trip/item refs, integer amount/currency, versi/digest receipt, route dan destination. Canonical serialization deterministik dirinci sebelum implementasi; reorder item list dinormalisasi menurut ID. Key sama dengan hash berbeda 409; key sama/hash sama mengembalikan hasil yang sama setelah reotorisasi. Query hasil tidak mengubah aturan yang dikunci.
 
+### Baseline HTTP yang diimplementasikan pada BE-02
+
+Health berada di luar prefix bisnis: `GET /health/live` memberi 200 `{status:ok,scope:process}`; `GET /health/ready` memberi 200 `{status:ready,scope:bootstrap}` setelah lifecycle startup dan 503 envelope saat belum siap. Kesiapan bootstrap belum menguji DB/model/identity/storage; dependency minimum ditambahkan saat tersedia.
+
+Server menerbitkan UUID request baru dan mengirim `X-Request-ID`, mengabaikan input ID klien; body error memakai ID yang sama. Error memakai pesan/code aman tanpa input atau detail exception bebas. Malformed JSON 400, validasi input 422, oversize 413, deadline body 408, unhandled failure 500. `retryable` true hanya untuk 408/429/503 pada baseline; flag bukan izin mengulang tindakan bisnis dengan key baru. Respons HTTP yang ditolak parser/server sebelum ASGI di luar envelope aplikasi.
+
+Body default 1 MiB, config maksimum 16 MiB, dihitung dari byte aktual termasuk request chunked/tanpa Content-Length. Deadline menerima body default 10 detik, config 1–60. Content-Length invalid/duplikat/mismatch ditolak di boundary aplikasi bila mencapai ASGI. Input model berikutnya memakai RequestModel strict/extra-forbid/string≤4096 ditambah batas khusus endpoint. Upload FILE-01 harus memilih batas transport yang memadai untuk file maksimum 10 MiB dan menguji ulang; belum tersedia pada BE-02.
+
 Hash didefinisikan per operation kind. Submission mengikat snapshot draf/consent beserta seluruh field di atas. Information update juga mengikat claim, expected_version dan revision yang diganti. Decision wajib mengikat claim_id, expected_version, revision, stage, decision (`approve/reject/request_information`) dan reason persis yang dikirim, selain tenant/actor/operation ID. Human_action_receipt dan signed delegation mengikat canonical hash yang sama. Perubahan decision/reason/stage/revision dengan key atau grant lama ditolak; replay identik tidak mengambil keputusan baru. Normalisasi string/whitespace dan urutan field ditetapkan konsisten pada canonical serialization, bukan menghapus alasan dari hash.
 
 ### API browser — identity dan tenant

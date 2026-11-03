@@ -104,7 +104,7 @@ def test_settings_reject_boolean_port_and_are_immutable():
 def test_non_development_has_no_docs_or_business_routes(mode):
     app = create_app(Settings(env=mode, host="127.0.0.1", port=8000))
     with TestClient(app) as client:
-        for path in ["/docs", "/openapi.json", "/redoc", "/health/live", "/api/v1/claims"]:
+        for path in ["/docs", "/openapi.json", "/redoc", "/api/v1/claims"]:
             assert client.get(path).status_code == 404
     assert app.debug is False
 
@@ -117,7 +117,7 @@ def test_development_schema_and_app_instances_are_isolated():
     with TestClient(first) as client:
         schema = client.get("/openapi.json").json()
         assert schema["info"]["title"] == "Enterprise AI Agent Platform API"
-        assert schema["paths"] == {}
+        assert set(schema["paths"]) == {"/health/live", "/health/ready"}
         assert client.get("/docs").status_code == 200
         assert client.get("/").status_code == 404
 

@@ -1,6 +1,6 @@
 # Arsitektur backend
 
-Status: rancangan implementasi bertahap. BE-01 menyediakan bootstrap API/config; komponen bisnis, worker, database dan service referensi belum diimplementasikan. Acuan: [kontrak produk](../../PRODUCT_CONTRACT.md), [arsitektur sistem](../../ARCHITECTURE.md), [kontrak data/API](../../DATA_AND_API_CONTRACTS.md), [test plan](../../TEST_PLAN.md). Dokumen pendamping: [database schema](database_schema.md) dan [task plan](task_plan.md).
+Status: rancangan implementasi bertahap. BE-01 menyediakan bootstrap API/config dan BE-02 menyediakan health/readiness serta HTTP boundary. Komponen bisnis, worker, database dan service referensi belum diimplementasikan. Acuan: [kontrak produk](../../PRODUCT_CONTRACT.md), [arsitektur sistem](../../ARCHITECTURE.md), [kontrak data/API](../../DATA_AND_API_CONTRACTS.md), [test plan](../../TEST_PLAN.md). Dokumen pendamping: [database schema](database_schema.md) dan [task plan](task_plan.md).
 
 ## 1. Unit executable dan tanggung jawab
 

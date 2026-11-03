@@ -1,4 +1,4 @@
-"""Validated bootstrap settings; no provider credentials are needed in BE-01."""
+"""Validated API settings; provider credentials follow their feature tasks."""
 
 import ipaddress
 import re
@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     env: Literal["development", "test", "production"]
     host: str
     port: int = Field(ge=1, le=65535)
+    max_request_body_bytes: int = Field(default=1048576, ge=1, le=16777216)
+    request_body_timeout_seconds: int = Field(default=10, ge=1, le=60)
 
     @field_validator("host")
     @classmethod
@@ -38,14 +40,14 @@ class Settings(BaseSettings):
         except ValueError:
             raise ValueError("An IP address is required.") from None
 
-    @field_validator("port", mode="before")
+    @field_validator("port", "max_request_body_bytes", "request_body_timeout_seconds", mode="before")
     @classmethod
     def validate_port(cls, value: object) -> object:
         if type(value) is int:
             return value
-        if isinstance(value, str) and re.fullmatch(r"[0-9]{1,5}", value):
+        if isinstance(value, str) and re.fullmatch(r"[0-9]{1,9}", value):
             return int(value)
-        raise ValueError("An integer port is required.")
+        raise ValueError("An integer setting is required.")
 
 
 def load_settings(
@@ -68,7 +70,7 @@ def load_settings(
             {
                 "APP_" + str(error["loc"][0]).upper()
                 for error in exc.errors(include_input=False, include_context=False)
-                if error["loc"] and error["loc"][0] in {"env", "host", "port"}
+                if error["loc"] and error["loc"][0] in Settings.model_fields
             }
         )
         suffix = ": " + ", ".join(fields) if fields else "."

@@ -1,17 +1,31 @@
-"""BE-01 API bootstrap; feature routes follow subsequent task-plan entries."""
+"""API bootstrap and HTTP boundary; business routes follow later tasks."""
 
 import argparse
+import logging
 import sys
 from pathlib import Path
+from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
 
 from enterprise_ai_platform import __version__
+from enterprise_ai_platform.api.boundary import RequestBoundary
+from enterprise_ai_platform.api.errors import install_error_handlers
+from enterprise_ai_platform.api.health import router as health_router
+from enterprise_ai_platform.api.schemas import ErrorResponse
 from enterprise_ai_platform.config import ConfigurationError, Settings, load_settings
 
 
 def create_app(settings: Settings) -> FastAPI:
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        app.state.ready = True
+        try:
+            yield
+        finally:
+            app.state.ready = False
+
     development = settings.env == "development"
     app = FastAPI(
         title="Enterprise AI Agent Platform API",
@@ -20,8 +34,17 @@ def create_app(settings: Settings) -> FastAPI:
         docs_url="/docs" if development else None,
         redoc_url=None,
         openapi_url="/openapi.json" if development else None,
+        lifespan=lifespan,
+        responses={code: {"model": ErrorResponse} for code in (400, 404, 405, 408, 413, 422, 500)},
     )
     app.state.settings = settings
+    app.state.ready = False
+    install_error_handlers(app)
+    app.include_router(health_router)
+    app.add_middleware(
+        RequestBoundary, max_body_bytes=settings.max_request_body_bytes,
+        body_timeout=settings.request_body_timeout_seconds,
+    )
     return app
 
 
@@ -42,6 +65,13 @@ def main() -> None:
         print("Configuration valid.")
         return
     # Raw paths/query strings can contain private data, even on rejected routes.
+    http_logger = logging.getLogger("enterprise_ai_platform.http")
+    if not http_logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter("%(levelname)s %(name)s %(message)s"))
+        http_logger.addHandler(handler)
+    http_logger.setLevel(logging.INFO)
+    http_logger.propagate = False
     uvicorn.run(
         create_app(settings), host=settings.host, port=settings.port,
         access_log=False, ws="none",

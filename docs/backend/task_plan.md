@@ -1,6 +1,6 @@
 # Backend task plan
 
-Status: **BE-01 selesai dan lulus QA — 3 November 2026**. Tugas implementasi lain **belum mulai**. Skeleton dan dokumen bukan bukti bahwa fitur lain dalam tabel telah selesai. Acuan [backend architecture](architecture.md), [database schema](database_schema.md), [PRODUCT_CONTRACT.md](../../PRODUCT_CONTRACT.md), [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), dan [TEST_PLAN.md](../../TEST_PLAN.md).
+Status: **BE-01 dan BE-02 selesai dan lulus QA — 3 November 2026**. Tugas implementasi lain **belum mulai**. Skeleton dan dokumen bukan bukti bahwa fitur lain dalam tabel telah selesai. Acuan [backend architecture](architecture.md), [database schema](database_schema.md), [PRODUCT_CONTRACT.md](../../PRODUCT_CONTRACT.md), [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), dan [TEST_PLAN.md](../../TEST_PLAN.md).
 
 ## 1. Cara menggunakan rencana
 
@@ -127,4 +127,18 @@ Setiap penutupan mencatat ID/status, commit/config/dataset versions, test comman
 - **QA lulus tanpa temuan material**, mereproduksi suite, instalasi bersih, wheel, console, serta empat probe config sintetis tersanitasi secara independen. QA tidak membaca `.env` pengguna.
 - Batas bukti: bootstrap executable saja. Belum meluluskan DB, auth, health/readiness/error contracts BE-02, wiring BE-03, worker, model atau workflow bisnis. `/docs` dan `/openapi.json` hanya pada development; `/` serta endpoint bisnis masih 404.
 
-Berikutnya **BE-02**, sesuai dependency tabel. Provider spike boleh dijadwalkan terpisah setelah BE-01 tanpa mengklaim integrasi yang belum diuji.
+Urutan setelah BE-01 adalah **BE-02**, sesuai dependency tabel. Provider spike boleh dijadwalkan terpisah setelah BE-01 tanpa mengklaim integrasi yang belum diuji.
+
+## 12. Hasil pelaksanaan BE-02
+
+**Selesai — 3 November 2026.** Health process/bootstrap-readiness, stable error envelope, server-owned request ID, request metadata logging, serta batas body/field dasar tersedia.
+
+- `/health/live` memeriksa proses; `/health/ready` mengikuti lifecycle bootstrap (200/503). Dependency DB/model/OIDC/storage belum tersedia dan tidak diklaim sehat.
+- Error 400/404/405/408/413/422/500 serta status HTTP lain yang didukung memakai envelope tanpa raw input/exception detail. Request ID UUID dari server sama pada header/body error, berbeda antarrequest bersamaan. Mode debug tetap false; raw access log tetap off.
+- Limit body default 1 MiB, maksimum konfigurasi 16 MiB; aktual byte termasuk chunked diperiksa. Receive deadline default 10 detik (1–60). Input model dasar strict/extra-forbid/string≤4096, sedangkan batas domain/list mengikuti endpoint masa depan.
+- **58 tes lulus**, termasuk HTTP nyata untuk health/error/request ID, exact/oversize/chunked body, timeout/disconnect, field validation, invalid output, concurrency, dan kegagalan setelah headers tanpa response kedua atau raw input di log.
+- Clean staged-file export tanpa `.env`/virtualenv pengguna, locked dependency install, build sdist/wheel, non-editable wheel import, console config check, dan suite penuh berhasil: **58 passed**.
+- **QA independen lulus tanpa temuan material**, mengulang 58 tes dari wheel non-editable, real HTTP, serta probe FastAPI StreamingResponse yang gagal setelah headers. Source dan kontrak telah diperiksa; tidak membaca `.env` pengguna.
+- Batas bukti: HTTP boundary aplikasi saja. Parser/server dapat menolak request sebelum ASGI tanpa envelope aplikasi. Belum meluluskan wiring BE-03, auth, DB, upload file, agent/RAG, business workflow, atau production readiness keseluruhan. Dependency versions tetap menggunakan lockfile BE-01.
+
+Berikutnya **BE-03: composition root, service/port interfaces, dependency wiring dan guard import**.

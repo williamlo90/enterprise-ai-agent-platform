@@ -1,6 +1,6 @@
 # Repository layout
 
-Status: struktur repository telah direview QA. BE-01 menambahkan package API, config, manifest/lockfile dan tes bootstrap; folder lain tetap menyiapkan implementasi. Belum ada fitur bisnis, migration, atau deployment executable.
+Status: struktur repository telah direview QA. BE-01 menambahkan package API, config, manifest/lockfile dan tes bootstrap; BE-02 menambahkan health/readiness, HTTP boundary dan shared schemas. Folder lain tetap menyiapkan implementasi. Belum ada fitur bisnis, migration, atau deployment executable.
 
 Empat dokumen kontrak tetap di root. Struktur mengikuti [ARCHITECTURE.md](../ARCHITECTURE.md) dan tidak mengubah scope produk.
 
