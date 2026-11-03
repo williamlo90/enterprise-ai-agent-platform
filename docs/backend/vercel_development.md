@@ -36,3 +36,11 @@ Callback memuat kode sensitif pada query. Sebelum actual login SPIKE-01, periksa
 Harga/fitur akun harus dicek pada Vercel saat setup; source ini tidak mengaktifkan paket berbayar atau menjanjikan biaya nol. Untuk acceptance, catat build/runtime Python, revision deployed, region, URL actual, HTTP health, DB jika diaktifkan, cold/warm behavior dan keterbatasan tersanitasi. Jangan log secret atau salin environment pengguna ke artifact.
 
 Referensi: [FastAPI di Vercel](https://vercel.com/docs/frameworks/backend/fastapi), [Python runtime](https://vercel.com/docs/functions/runtimes/python), [function limits](https://vercel.com/docs/functions/limitations).
+
+## Deployment bootstrap aktual — 3 November 2026
+
+Project development `enterprise-ai-platform-dev` telah dideploy dari source `ea4dff0f1fb14aaa9090a092d3dfa7172a2dad60`, Root Directory backend, FastAPI, dashboard mencatat build 20 detik (alur import melaporkan 22 detik). Domain project tetap: https://enterprise-ai-platform-dev.vercel.app . Ini environment Production menurut Vercel, dengan scope aplikasi development/bootstrap.
+
+Main melakukan HTTP eksternal tanpa login Vercel: /health/live 200 process, /health/ready 200 bootstrap, /docs 404 envelope, /api/v1/auth/callback 404 envelope, dan pengulangan health 200. Routing header menunjukkan region sin1. APP_DATABASE_ENABLED=false; tidak memasukkan credential DB/auth. Belum menguji cloud DB, forced cold start/restart/load, transaction persistence, OIDC atau logging callback provider. Target callback baru adalah https://enterprise-ai-platform-dev.vercel.app/api/v1/auth/callback ; **belum didaftarkan ulang ke Cognito melalui pekerjaan deploy ini**. Konfigurasi callback ngrok lama perlu diganti sebelum login test.
+
+Setelah bootstrap cloud terverifikasi, pengguna dapat menghentikan terminal backend/ngrok lokal. Tidak ada proses lokal dihentikan otomatis agar proses proyek lain tidak terpengaruh. **QA independen PASS bootstrap cloud**: mereproduksi seluruh HTTP checks di atas tanpa interstitial login Vercel, region sin1, tanpa blocker bootstrap. Identitas revision mengikuti source pada dashboard deployment; HTTP publik tidak membuktikan commit. Bukti screenshot tersanitasi disimpan lokal pada local/vercel/deployment-ready.png dan diabaikan Git.
