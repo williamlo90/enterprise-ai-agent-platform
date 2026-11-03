@@ -6,7 +6,7 @@ The initial product combines a bilingual travel-policy assistant with reimbursem
 
 ## Project status
 
-Product and technical planning are documented and reviewed. Application implementation has not started.
+Product and technical planning are documented and reviewed. The repository skeleton is in place; application implementation has not started.
 
 ## Planned MVP
 
@@ -26,6 +26,24 @@ Reimbursement payments are outside the MVP. Cloud operations and open-source inf
 | [Architecture](ARCHITECTURE.md) | Components, responsibilities, trust boundaries, data flows, and deployment. |
 | [Data and API contracts](DATA_AND_API_CONTRACTS.md) | Data ownership, API behavior, authorization, and state transitions. |
 | [Test plan](TEST_PLAN.md) | Requirement coverage, initial 80-case RAG and 24-scenario workflow packs, critical suites, and manual–assisted pilot. |
+| [Repository layout](docs/REPOSITORY_LAYOUT.md) | Folder responsibilities, module boundaries, test placement, and bootstrap conventions. |
+
+## Repository structure
+
+```text
+frontend/           Web application
+backend/            Platform API and worker, one Python package
+reference_service/  Independent reimbursement service
+contracts/          Future executable API and schema contracts
+tests/              Cross-system E2E, security, and resilience checks
+evaluations/        Datasets, rubrics, runners, and manifests
+scripts/            Development, checks, and operations
+deploy/             Containers, local compose, Kubernetes, and IaC
+docs/               Layout, decisions, and runbooks
+.github/workflows/  Future CI/CD workflows
+```
+
+Empty directories contain `.gitkeep` markers. Runnable entry points, dependency manifests, lockfiles, migrations, and deployment configuration will be added with their implementation stages.
 
 ## Initial technical direction
 
