@@ -6,7 +6,7 @@ The initial product combines a bilingual travel-policy assistant with reimbursem
 
 ## Project status
 
-BE-01 and BE-02 are complete and QA-reviewed, with 58 passing tests including clean wheel installation and real HTTP checks. The API provides process/bootstrap-readiness probes, consistent errors, server-owned request IDs, and bounded input handling. Business features are not implemented. See [backend setup](backend/README.md).
+BE-01 through BE-03 are complete and QA-reviewed, with 91 passing tests including clean wheel installation. The API provides health/readiness, consistent errors, request IDs, bounded input handling, and application-local service/port wiring with architecture checks. Business features are not implemented. See [backend setup](backend/README.md).
 
 ## Planned MVP
 

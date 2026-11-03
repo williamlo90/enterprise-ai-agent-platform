@@ -15,16 +15,16 @@ from enterprise_ai_platform.api.errors import install_error_handlers
 from enterprise_ai_platform.api.health import router as health_router
 from enterprise_ai_platform.api.schemas import ErrorResponse
 from enterprise_ai_platform.config import ConfigurationError, Settings, load_settings
+from enterprise_ai_platform.composition import ApplicationServices, build_resources, build_services
 
 
-def create_app(settings: Settings) -> FastAPI:
+def create_app(settings: Settings, *, services: ApplicationServices | None = None) -> FastAPI:
+    resources = build_resources()
+
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        app.state.ready = True
-        try:
+        async with resources.lifecycle():
             yield
-        finally:
-            app.state.ready = False
 
     development = settings.env == "development"
     app = FastAPI(
@@ -38,7 +38,8 @@ def create_app(settings: Settings) -> FastAPI:
         responses={code: {"model": ErrorResponse} for code in (400, 404, 405, 408, 413, 422, 500)},
     )
     app.state.settings = settings
-    app.state.ready = False
+    app.state.resources = resources
+    app.state.services = build_services(resources) if services is None else services
     install_error_handlers(app)
     app.include_router(health_router)
     app.add_middleware(

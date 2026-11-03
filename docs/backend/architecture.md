@@ -1,6 +1,6 @@
 # Arsitektur backend
 
-Status: rancangan implementasi bertahap. BE-01 menyediakan bootstrap API/config dan BE-02 menyediakan health/readiness serta HTTP boundary. Komponen bisnis, worker, database dan service referensi belum diimplementasikan. Acuan: [kontrak produk](../../PRODUCT_CONTRACT.md), [arsitektur sistem](../../ARCHITECTURE.md), [kontrak data/API](../../DATA_AND_API_CONTRACTS.md), [test plan](../../TEST_PLAN.md). Dokumen pendamping: [database schema](database_schema.md) dan [task plan](task_plan.md).
+Status: rancangan implementasi bertahap. BE-01/02 menyediakan bootstrap API/config dan HTTP boundary; BE-03 memasang composition/service/port health. Komponen bisnis, worker, database dan service referensi belum diimplementasikan. Acuan: [kontrak produk](../../PRODUCT_CONTRACT.md), [arsitektur sistem](../../ARCHITECTURE.md), [kontrak data/API](../../DATA_AND_API_CONTRACTS.md), [test plan](../../TEST_PLAN.md). Dokumen pendamping: [database schema](database_schema.md) dan [task plan](task_plan.md).
 
 ## 1. Unit executable dan tanggung jawab
 
@@ -43,6 +43,10 @@ Modul lain hanya memanggil public service/port. Import repository/private domain
 | drafts | Editable drafts dan immutable draft versions | prepare/patch/preview/freeze; owns item/receipt snapshot validation |
 | actions | Consent, human_action_receipts, actions/outbox orchestration | confirm/record decision/dispatch/reconcile/seal; owns stable operation identity |
 | audit | Append-only redacted event records | record/read scoped event; bukan tempat menyimpan receipt/prompt lengkap |
+
+Modul fondasi `system` sudah diimplementasikan untuk health: ProbeResult dataclass, BootstrapReadiness/HealthServicePort Protocol, serta HealthService. RuntimeReadiness adapter dimiliki ApplicationResources per app; ApplicationServices memasang HealthService. Route health memakai dependency ke port. Invariant bisnis tenant/DB/worker dalam tabel lain tetap target tugas berikutnya, bukan ditutup oleh wiring health.
+
+Guard AST pada `scripts/checks/check_architecture.py` menegakkan import layer termasuk relative/from-package forms dan menolak dynamic import/wildcards. Source API tidak mengimpor composition/adapters; config independen; cross-package platform/service ditolak. Guard ini pemeriksaan static dependency, bukan security sandbox untuk kode Python arbitrer. Unit negatif dan tes substitusi service mengecek batas tersebut; aturan berkembang dengan layer yang diotorisasi.
 
 `integrations/identity` mengimplementasikan OIDC; `integrations/models` chat/tool/embedding/rerank ports; `integrations/reimbursement` HTTP client dan delegation; `infrastructure/database` pool/UoW/repository adapters; `infrastructure/checkpoints` persistent fenced adapter; `infrastructure/jobs` leasing scheduler; `infrastructure/storage` private bytes; `infrastructure/observability` request/trace/usage; `infrastructure/security_journal` external durable journal port. Penempatan repository implementation per modul dapat memakai subpackage adapter modul, tetapi wiring dan boundary yang sama wajib dipertahankan dan layout diperbarui bila ditambah.
 

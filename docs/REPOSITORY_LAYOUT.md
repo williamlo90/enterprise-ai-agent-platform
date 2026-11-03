@@ -1,6 +1,6 @@
 # Repository layout
 
-Status: struktur repository telah direview QA. BE-01 menambahkan package API, config, manifest/lockfile dan tes bootstrap; BE-02 menambahkan health/readiness, HTTP boundary dan shared schemas. Folder lain tetap menyiapkan implementasi. Belum ada fitur bisnis, migration, atau deployment executable.
+Status: struktur repository telah direview QA. BE-01/02 menyediakan package API/config dan HTTP boundary; BE-03 menambahkan composition root, modul system health, runtime readiness adapter dan guard import. Folder lain tetap menyiapkan implementasi. Belum ada fitur bisnis, migration, atau deployment executable.
 
 Empat dokumen kontrak tetap di root. Struktur mengikuti [ARCHITECTURE.md](../ARCHITECTURE.md) dan tidak mengubah scope produk.
 
@@ -35,6 +35,7 @@ enterprise-ai-agent-platform/
 │   │   │   ├── public/
 │   │   │   └── internal/
 │   │   ├── modules/
+│   │   │   ├── system/
 │   │   │   ├── identity/
 │   │   │   ├── tenancy/
 │   │   │   ├── knowledge/
@@ -50,6 +51,7 @@ enterprise-ai-agent-platform/
 │   │   │   ├── models/
 │   │   │   └── reimbursement/
 │   │   └── infrastructure/
+│   │       ├── runtime.py
 │   │       ├── database/
 │   │       ├── checkpoints/
 │   │       ├── jobs/
@@ -118,6 +120,7 @@ enterprise-ai-agent-platform/
 - API dan worker platform memakai package `enterprise_ai_platform` yang sama. Entry point API/worker, config, composition root, manifest dan lockfile dibuat pada tahap bootstrap, bukan diisi placeholder seolah executable.
 - Route menangani transport/validasi dan memanggil service modul. Domain/service/ports diletakkan dalam modul sesuai kebutuhan; adapter SQL/provider memasok implementasi port. Domain tidak mengimpor FastAPI, SDK provider atau koneksi DB. Modul lain mengakses public service/port, bukan tabel atau repository internal modul.
 - `modules/actions` memiliki consent/human action receipt, action identity, snapshot, state dan orkestrasi dispatch; `infrastructure/jobs` menyediakan claim/lease/outbox runner. State bisnis claim serta keputusan final milik service referensi. `modules/drafts` mengelola isi draf dan versinya; `modules/policies` mengelola paket aturan/eligibility. Detail transaksi consent+draft freeze+action/outbox dikoordinasikan oleh service aplikasi dan unit of work platform, tidak oleh route/model.
+- `modules/system` adalah fondasi health yang sudah digunakan sekarang: domain ProbeResult, BootstrapReadiness/HealthServicePort, dan HealthService. `composition.py` memasang adapter `infrastructure/runtime.py` per aplikasi. Ini tidak mengklaim service tenant/auth/database sudah diimplementasikan.
 - `modules/files` mengelola metadata/pin/akses/lifecycle file; adapter bytes privat di `infrastructure/storage`. Knowledge mengurus parsing/index dan memanggil file service. Agent menggunakan layanan bisnis yang sama dengan formulir manual, bukan SQL atau SDK bebas.
 - Identity membership/tenant policy aplikasi berbeda dari adapter OIDC di `integrations/identity`. Signed delegation, actor/eligibility/receipt API platform berada pada route internal dengan layanan domain terkait.
 - Reference service merupakan package dan unit build/deployment terpisah. Tidak mengimpor source backend, berbagi runtime model ORM, migration atau credential DB. `integrations/platform` memanggil HTTP API actor, eligibility dan receipt; `modules/access` mengendalikan izin service dan unduh receipt melalui relasi claim. `modules/operations` memiliki idempotency ledger/seal; `modules/claims` memiliki stage, revisions, keputusan dan expense reservations.
@@ -135,4 +138,4 @@ enterprise-ai-agent-platform/
 
 ## Kelanjutan bootstrap
 
-Platform API mendapatkan manifest/lockfile, konfigurasi tervalidasi, entry point dan instruksi run/test pada BE-01; composition root dan dependency wiring diperinci pada BE-03. Unit worker/reference service mengikuti task masing-masing. Secret menggunakan environment atau secret manager; `.env.example` BE-01 hanya memuat tiga setting bootstrap tanpa credential. Struktur ini tidak otomatis mengizinkan pembuatan resource cloud atau pemakaian data sensitif.
+Platform API mendapatkan manifest/lockfile, konfigurasi tervalidasi, entry point pada BE-01, HTTP boundary pada BE-02, dan composition/wiring health pada BE-03. Unit worker/reference service mengikuti task masing-masing. Secret menggunakan environment atau secret manager; `.env.example` berisi bootstrap/boundary settings tanpa credential. Struktur ini tidak otomatis mengizinkan pembuatan resource cloud atau pemakaian data sensitif.

@@ -1,6 +1,6 @@
 # Backend task plan
 
-Status: **BE-01 dan BE-02 selesai dan lulus QA — 3 November 2026**. Tugas implementasi lain **belum mulai**. Skeleton dan dokumen bukan bukti bahwa fitur lain dalam tabel telah selesai. Acuan [backend architecture](architecture.md), [database schema](database_schema.md), [PRODUCT_CONTRACT.md](../../PRODUCT_CONTRACT.md), [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), dan [TEST_PLAN.md](../../TEST_PLAN.md).
+Status: **BE-01, BE-02, dan BE-03 selesai dan lulus QA — 3 November 2026**. Tugas implementasi lain **belum mulai**. Skeleton dan dokumen bukan bukti bahwa fitur lain dalam tabel telah selesai. Acuan [backend architecture](architecture.md), [database schema](database_schema.md), [PRODUCT_CONTRACT.md](../../PRODUCT_CONTRACT.md), [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), dan [TEST_PLAN.md](../../TEST_PLAN.md).
 
 ## 1. Cara menggunakan rencana
 
@@ -142,3 +142,16 @@ Urutan setelah BE-01 adalah **BE-02**, sesuai dependency tabel. Provider spike b
 - Batas bukti: HTTP boundary aplikasi saja. Parser/server dapat menolak request sebelum ASGI tanpa envelope aplikasi. Belum meluluskan wiring BE-03, auth, DB, upload file, agent/RAG, business workflow, atau production readiness keseluruhan. Dependency versions tetap menggunakan lockfile BE-01.
 
 Berikutnya **BE-03: composition root, service/port interfaces, dependency wiring dan guard import**.
+
+## 13. Hasil pelaksanaan BE-03
+
+**Selesai — 3 November 2026.** Composition root memasang ApplicationServices dan ApplicationResources per aplikasi. Modul system menyediakan domain ProbeResult, BootstrapReadiness/HealthServicePort, serta HealthService yang digunakan route melalui dependency injection. Readiness adapter dimiliki lifecycle aplikasi, bukan singleton global.
+
+- Factory service override dan FastAPI dependency override terbukti mencapai route aktual dan tidak bocor ke app lain; container services immutable, resources default terpisah dan lifecycle gagal tetap menonaktifkan readiness.
+- Guard AST pada `scripts/checks/check_architecture.py` memeriksa import absolut/relatif, public port/service boundaries, config independence, cross-package source, dynamic imports/wildcards dan driver database stdlib pada layer yang dilarang. Negative fixtures dan positive adapter cases tersedia pada kedua package.
+- **91 tes lulus**, termasuk regresi HTTP BE-01/02, wiring/lifecycle, serta guard positive/negative cases.
+- Clean export dari file Git tanpa `.env`, dependency locked, sdist/wheel build, install wheel non-editable, composition import dari site-packages, guard CLI, console config check dan suite penuh berhasil: **91 passed**.
+- **QA lulus setelah satu temuan P2 diperbaiki:** whitelist stdlib kini tidak mengizinkan sqlite3/_sqlite3/dbm/shelve pada route/domain/ports/service/config. Adapter tetap boleh memakainya. QA mengulang probe serta seluruh 91 tes dari wheel bersih dan menyatakan tidak ada temuan material tersisa.
+- Batas bukti: fondasi wiring/guard saja; guard adalah static dependency regression, bukan sandbox. Tenant/business repositories, DB/UoW, auth, worker dan adapter provider belum diimplementasikan. Interface fitur masa depan tidak dianggap tersedia hanya karena health memakai Protocol.
+
+Berikutnya **DB-01: konfigurasi koneksi runtime/migration dan pengujian transaksi database**, sesuai prasyarat. Provider spike tetap dapat dijadwalkan tersendiri.

@@ -60,14 +60,14 @@ def check_error(response, code):
 
 
 def test_health_lifecycle_and_readiness_is_not_dependency_health(app):
-    assert app.state.ready is False
+    assert app.state.resources.readiness.is_ready() is False
     with TestClient(app) as client:
         assert client.get("/health/live").json() == {"status": "ok", "scope": "process"}
         assert client.get("/health/ready").json() == {"status": "ready", "scope": "bootstrap"}
-        app.state.ready = False
+        app.state.resources.readiness.ready = False
         assert check_error(client.get("/health/ready"), 503)["retryable"] is True
         assert client.get("/health/live").status_code == 200
-    assert app.state.ready is False
+    assert app.state.resources.readiness.is_ready() is False
 
 
 @pytest.mark.parametrize("code", [400, 401, 403, 404, 409, 415, 422, 429, 500, 503])

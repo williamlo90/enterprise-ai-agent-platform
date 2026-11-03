@@ -1,6 +1,6 @@
 # Backend platform
 
-BE-01 menyediakan paket FastAPI yang dapat diinstal dan dijalankan. BE-02 menambahkan health/readiness bootstrap, error envelope, request ID dan batas input. Composition serta modul bisnis mengikuti BE-03 dan tugas berikutnya. Belum ada DB, autentikasi, RAG, worker, atau endpoint reimbursement.
+BE-01 menyediakan paket FastAPI yang dapat diinstal dan dijalankan. BE-02 menambahkan health/readiness bootstrap, error envelope, request ID dan batas input. BE-03 memasang composition root, health service/ports dan dependency wiring. Belum ada DB, autentikasi, RAG, worker, atau endpoint reimbursement.
 
 ## Persiapan
 
@@ -61,6 +61,7 @@ Tidak ada default diam-diam untuk tiga variabel wajib. Kesalahan konfigurasi men
 ```powershell
 python -m uv run --locked --project backend pytest backend/tests
 python -m uv build --project backend --out-dir local/be01-dist
+python scripts/checks/check_architecture.py
 ```
 
 `uv.lock` mengunci dependency aplikasi dan development. Build backend `uv_build` juga dipin pada pyproject. Perubahan dependency harus memperbarui lock dan menjalankan checks relevan. `.gitkeep` masih menandai direktori fitur yang belum diimplementasikan.
@@ -68,3 +69,15 @@ python -m uv build --project backend --out-dir local/be01-dist
 Verifikasi BE-01 menghasilkan **20 tes lulus**, termasuk konfigurasi, isolasi app, CLI failure dan startup HTTP aktual. Instalasi wheel non-editable dari salinan bersih dan reproduksi QA independen juga lulus; bukti serta batasnya tercatat pada [task plan](../docs/backend/task_plan.md#11-hasil-pelaksanaan-be-01). Tes bootstrap tidak meluluskan API/DB/security seluruh produk.
 
 BE-02 memperluas suite menjadi **58 tes lulus**, termasuk batas body/chunked, error sanitisation, request ID, health/readiness, dan failure setelah headers. Instalasi wheel bersih serta reproduksi QA independen lulus. Bukti dan batas kelulusannya ada pada [hasil BE-02](../docs/backend/task_plan.md#12-hasil-pelaksanaan-be-02).
+
+## Composition dan batas dependency BE-03
+
+`main.create_app(settings, services=...)` membuat resources baru untuk setiap app dan menerima substitusi ApplicationServices untuk pengujian. `composition.py` memasang HealthService pada RuntimeReadiness melalui port. Lifespan mengaktifkan readiness dan selalu menonaktifkannya saat keluar. Route memakai FastAPI Depends ke HealthServicePort, tidak membaca resource adapter secara langsung. Container service immutable; readiness mutable hanya dimiliki satu aplikasi.
+
+Modul system memakai dataclass dan Protocol stdlib. Domain/ports tidak mengimpor transport, SDK, config atau DB; service menggunakan domain/ports dan public service/port modul lain. API hanya memakai transport serta public module service/port. Adapters memakai domain/ports dan tidak mengimpor route atau composition. Config terpisah dari application wiring. Reference service tidak mengimpor source platform, begitu pula sebaliknya.
+
+`scripts/checks/check_architecture.py` memeriksa import AST source aplikasi termasuk relative imports, package imports, cross-module private imports dan mekanisme dynamic import. Driver database stdlib (`sqlite3`, `_sqlite3`, `dbm`, `shelve`) ditolak pada API/domain/ports/service/config sebelum whitelist stdlib diterapkan; adapter tetap boleh memakainya. Importlib/builtins, wildcard import serta eval/exec/__import__ tidak diizinkan dalam source yang diperiksa. Guard merupakan regression check arsitektur, bukan sandbox atau bukti bahwa seluruh bentuk introspeksi Python mustahil. Perubahan layer/adapter memerlukan review aturan guard; tidak mematikan check untuk meloloskan dependency baru.
+
+Worker dan repository database belum tersedia. Resource lifecycle/UoW database ditambahkan pada DB-01, dan public service bisnis mengikuti task terkait; BE-03 tidak membuat interface kosong untuk seluruh fitur masa depan.
+
+BE-03 ditutup dengan **91 tes lulus**, termasuk build/install wheel bersih dan reproduksi QA independen. Temuan guard stdlib database sudah diperbaiki dan lulus recheck; catatan hasil ada pada [task plan BE-03](../docs/backend/task_plan.md#13-hasil-pelaksanaan-be-03).
