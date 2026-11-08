@@ -1,0 +1,506 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Enterprise AI independent journal, private immutable image repositories and backup destination. Operator deploy only.",
+  "Parameters": {
+    "ArtifactBucket": {
+      "Type": "String"
+    },
+    "ArtifactKey": {
+      "Type": "String"
+    },
+    "JournalId": {
+      "Type": "String",
+      "AllowedPattern": "[A-Za-z0-9_-]{8,128}"
+    },
+    "ProjectName": {
+      "Type": "String",
+      "Default": "enterprise-ai-dev",
+      "AllowedPattern": "[a-z][a-z0-9-]{2,40}"
+    },
+    "BackupRetentionDays": {
+      "Type": "Number",
+      "MinValue": 1,
+      "MaxValue": 3650
+    },
+    "ReservedConcurrency": {
+      "Type": "Number",
+      "Default": 0,
+      "AllowedValues": [
+        0,
+        1,
+        2
+      ]
+    }
+  },
+  "Conditions": {
+    "Reserve": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ReservedConcurrency"
+            },
+            0
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "Journal": {
+      "Type": "AWS::DynamoDB::Table",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "BillingMode": "PAY_PER_REQUEST",
+        "DeletionProtectionEnabled": true,
+        "PointInTimeRecoverySpecification": {
+          "PointInTimeRecoveryEnabled": true
+        },
+        "SSESpecification": {
+          "SSEEnabled": true
+        },
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "pk",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "sk",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "pk",
+            "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "sk",
+            "KeyType": "RANGE"
+          }
+        ]
+      }
+    },
+    "BackupBucket": {
+      "Type": "AWS::S3::Bucket",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "VersioningConfiguration": {
+          "Status": "Enabled"
+        },
+        "ObjectLockEnabled": true,
+        "ObjectLockConfiguration": {
+          "ObjectLockEnabled": "Enabled",
+          "Rule": {
+            "DefaultRetention": {
+              "Mode": "GOVERNANCE",
+              "Days": {
+                "Ref": "BackupRetentionDays"
+              }
+            }
+          }
+        },
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true
+        }
+      }
+    },
+    "WriterRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "journal-only",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:TransactWriteItems"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Journal",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ProjectName}-journal-*:*"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "ReaderRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "journal-only",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Journal",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ProjectName}-journal-*:*"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "PlatformLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${ProjectName}-journal-platform"
+        },
+        "RetentionInDays": 7
+      }
+    },
+    "PlatformJournal": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": {
+          "Fn::Sub": "${ProjectName}-journal-platform"
+        },
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "handler.handler",
+        "MemorySize": 256,
+        "Timeout": 30,
+        "Role": {
+          "Fn::GetAtt": [
+            "WriterRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ArtifactBucket"
+          },
+          "S3Key": {
+            "Ref": "ArtifactKey"
+          }
+        },
+        "ReservedConcurrentExecutions": {
+          "Fn::If": [
+            "Reserve",
+            {
+              "Ref": "ReservedConcurrency"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "Environment": {
+          "Variables": {
+            "JOURNAL_TABLE": {
+              "Ref": "Journal"
+            },
+            "JOURNAL_ID": {
+              "Ref": "JournalId"
+            },
+            "SOURCE": "platform",
+            "MODE": "writer"
+          }
+        }
+      }
+    },
+    "ReferenceLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${ProjectName}-journal-reimbursement"
+        },
+        "RetentionInDays": 7
+      }
+    },
+    "ReferenceJournal": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": {
+          "Fn::Sub": "${ProjectName}-journal-reimbursement"
+        },
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "handler.handler",
+        "MemorySize": 256,
+        "Timeout": 30,
+        "Role": {
+          "Fn::GetAtt": [
+            "WriterRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ArtifactBucket"
+          },
+          "S3Key": {
+            "Ref": "ArtifactKey"
+          }
+        },
+        "ReservedConcurrentExecutions": {
+          "Fn::If": [
+            "Reserve",
+            {
+              "Ref": "ReservedConcurrency"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "Environment": {
+          "Variables": {
+            "JOURNAL_TABLE": {
+              "Ref": "Journal"
+            },
+            "JOURNAL_ID": {
+              "Ref": "JournalId"
+            },
+            "SOURCE": "reimbursement",
+            "MODE": "writer"
+          }
+        }
+      }
+    },
+    "RecoveryLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${ProjectName}-journal-reader"
+        },
+        "RetentionInDays": 7
+      }
+    },
+    "RecoveryJournal": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": {
+          "Fn::Sub": "${ProjectName}-journal-reader"
+        },
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "handler.handler",
+        "MemorySize": 256,
+        "Timeout": 30,
+        "Role": {
+          "Fn::GetAtt": [
+            "ReaderRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ArtifactBucket"
+          },
+          "S3Key": {
+            "Ref": "ArtifactKey"
+          }
+        },
+        "ReservedConcurrentExecutions": {
+          "Fn::If": [
+            "Reserve",
+            {
+              "Ref": "ReservedConcurrency"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "Environment": {
+          "Variables": {
+            "JOURNAL_TABLE": {
+              "Ref": "Journal"
+            },
+            "JOURNAL_ID": {
+              "Ref": "JournalId"
+            },
+            "SOURCE": "reader",
+            "MODE": "reader"
+          }
+        }
+      }
+    },
+    "EcrApi": {
+      "Type": "AWS::ECR::Repository",
+      "Properties": {
+        "RepositoryName": "eai-api",
+        "ImageTagMutability": "IMMUTABLE",
+        "ImageScanningConfiguration": {
+          "ScanOnPush": true
+        },
+        "EncryptionConfiguration": {
+          "EncryptionType": "AES256"
+        }
+      }
+    },
+    "EcrReference": {
+      "Type": "AWS::ECR::Repository",
+      "Properties": {
+        "RepositoryName": "eai-reference",
+        "ImageTagMutability": "IMMUTABLE",
+        "ImageScanningConfiguration": {
+          "ScanOnPush": true
+        },
+        "EncryptionConfiguration": {
+          "EncryptionType": "AES256"
+        }
+      }
+    },
+    "EcrWorker": {
+      "Type": "AWS::ECR::Repository",
+      "Properties": {
+        "RepositoryName": "eai-worker",
+        "ImageTagMutability": "IMMUTABLE",
+        "ImageScanningConfiguration": {
+          "ScanOnPush": true
+        },
+        "EncryptionConfiguration": {
+          "EncryptionType": "AES256"
+        }
+      }
+    },
+    "EcrWeb": {
+      "Type": "AWS::ECR::Repository",
+      "Properties": {
+        "RepositoryName": "eai-web",
+        "ImageTagMutability": "IMMUTABLE",
+        "ImageScanningConfiguration": {
+          "ScanOnPush": true
+        },
+        "EncryptionConfiguration": {
+          "EncryptionType": "AES256"
+        }
+      }
+    },
+    "EcrParser": {
+      "Type": "AWS::ECR::Repository",
+      "Properties": {
+        "RepositoryName": "eai-parser",
+        "ImageTagMutability": "IMMUTABLE",
+        "ImageScanningConfiguration": {
+          "ScanOnPush": true
+        },
+        "EncryptionConfiguration": {
+          "EncryptionType": "AES256"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "PlatformJournalArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PlatformJournal",
+          "Arn"
+        ]
+      }
+    },
+    "ReferenceJournalArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ReferenceJournal",
+          "Arn"
+        ]
+      }
+    },
+    "RecoveryJournalArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "RecoveryJournal",
+          "Arn"
+        ]
+      }
+    },
+    "JournalTable": {
+      "Value": {
+        "Ref": "Journal"
+      }
+    },
+    "BackupBucket": {
+      "Value": {
+        "Ref": "BackupBucket"
+      }
+    }
+  }
+}

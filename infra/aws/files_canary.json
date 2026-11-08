@@ -1,0 +1,452 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "FILE-01 fictional-only integration canary. Private S3 and standalone GuardDuty; no API/compute deployment.",
+  "Parameters": {
+    "BucketName": {
+      "Type": "String",
+      "AllowedPattern": "eai-files-canary-[a-f0-9]{12}"
+    },
+    "OperatorPrincipalArn": {
+      "Type": "String",
+      "AllowedPattern": "arn:aws:iam::[0-9]{12}:(user|role)/[A-Za-z0-9_+=,.@/-]{1,256}"
+    }
+  },
+  "Resources": {
+    "Bucket": {
+      "Type": "AWS::S3::Bucket",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "BucketName": {
+          "Ref": "BucketName"
+        },
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "IgnorePublicAcls": true,
+          "BlockPublicPolicy": true,
+          "RestrictPublicBuckets": true
+        },
+        "OwnershipControls": {
+          "Rules": [
+            {
+              "ObjectOwnership": "BucketOwnerEnforced"
+            }
+          ]
+        },
+        "VersioningConfiguration": {
+          "Status": "Enabled"
+        },
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "Id": "DisposableProbeOnly",
+              "Status": "Enabled",
+              "ExpirationInDays": 7,
+              "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 1
+              },
+              "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 1
+              }
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Scope",
+            "Value": "FILE-01"
+          },
+          {
+            "Key": "Data",
+            "Value": "fictional-only"
+          }
+        ]
+      }
+    },
+    "ScanRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "malware-protection-plan.guardduty.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "aws:SourceAccount": {
+                    "Ref": "AWS::AccountId"
+                  }
+                },
+                "ArnLike": {
+                  "aws:SourceArn": {
+                    "Fn::Sub": "arn:${AWS::Partition}:guardduty:${AWS::Region}:${AWS::AccountId}:malware-protection-plan/*"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "SingleBucketScan",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "events:PutRule",
+                    "events:DeleteRule",
+                    "events:PutTargets",
+                    "events:RemoveTargets"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/DO-NOT-DELETE-AmazonGuardDutyMalwareProtectionS3*"
+                  },
+                  "Condition": {
+                    "StringEquals": {
+                      "events:ManagedBy": "malware-protection-plan.guardduty.amazonaws.com"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "events:DescribeRule",
+                    "events:ListTargetsByRule"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/DO-NOT-DELETE-AmazonGuardDutyMalwareProtectionS3*"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:PutObjectTagging",
+                    "s3:GetObjectTagging",
+                    "s3:PutObjectVersionTagging",
+                    "s3:GetObjectVersionTagging"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "${Bucket.Arn}/quarantine/*"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetBucketNotification",
+                    "s3:PutBucketNotification",
+                    "s3:ListBucket"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Bucket",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:PutObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "${Bucket.Arn}/malware-protection-resource-validation-object"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:GetObjectVersion"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "${Bucket.Arn}/quarantine/*"
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Scope",
+            "Value": "FILE-01"
+          }
+        ]
+      }
+    },
+    "BucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "Bucket"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "TLSOnly",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Action": "s3:*",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "Bucket",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Fn::Sub": "${Bucket.Arn}/*"
+                }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false"
+                }
+              }
+            },
+            {
+              "Sid": "ImmutableConditionalUpload",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Action": "s3:PutObject",
+              "Resource": {
+                "Fn::Sub": "${Bucket.Arn}/quarantine/*"
+              },
+              "Condition": {
+                "StringNotEquals": {
+                  "s3:if-none-match": "*"
+                }
+              }
+            },
+            {
+              "Sid": "ProviderOwnsScanTags",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Action": [
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:DeleteObjectTagging",
+                "s3:DeleteObjectVersionTagging"
+              ],
+              "Resource": {
+                "Fn::Sub": "${Bucket.Arn}/quarantine/*"
+              },
+              "Condition": {
+                "ArnNotEquals": {
+                  "aws:PrincipalArn": {
+                    "Fn::GetAtt": [
+                      "ScanRole",
+                      "Arn"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "Sid": "QuarantineContentUntilClean",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Action": [
+                "s3:GetObject",
+                "s3:GetObjectVersion"
+              ],
+              "Resource": {
+                "Fn::Sub": "${Bucket.Arn}/quarantine/*"
+              },
+              "Condition": {
+                "StringNotEquals": {
+                  "s3:ExistingObjectTag/GuardDutyMalwareScanStatus": "NO_THREATS_FOUND"
+                },
+                "ArnNotEquals": {
+                  "aws:PrincipalArn": {
+                    "Fn::GetAtt": [
+                      "ScanRole",
+                      "Arn"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "MalwarePlan": {
+      "Type": "AWS::GuardDuty::MalwareProtectionPlan",
+      "DependsOn": [
+        "BucketPolicy"
+      ],
+      "Properties": {
+        "Role": {
+          "Fn::GetAtt": [
+            "ScanRole",
+            "Arn"
+          ]
+        },
+        "Actions": {
+          "Tagging": {
+            "Status": "ENABLED"
+          }
+        },
+        "ProtectedResource": {
+          "S3Bucket": {
+            "BucketName": {
+              "Ref": "Bucket"
+            },
+            "ObjectPrefixes": [
+              "quarantine/"
+            ]
+          }
+        },
+        "Tags": [
+          {
+            "Key": "Scope",
+            "Value": "FILE-01"
+          }
+        ]
+      }
+    },
+    "FileRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Ref": "OperatorPrincipalArn"
+                }
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalAccount": {
+                    "Ref": "AWS::AccountId"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "MaxSessionDuration": 3600,
+        "Policies": [
+          {
+            "PolicyName": "FileBytesOnly",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:PutObject",
+                    "s3:GetObjectVersionTagging"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "${Bucket.Arn}/quarantine/*"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObjectVersion",
+                    "s3:GetObjectVersionAttributes"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "${Bucket.Arn}/quarantine/*"
+                  },
+                  "Condition": {
+                    "StringEquals": {
+                      "s3:ExistingObjectTag/GuardDutyMalwareScanStatus": "NO_THREATS_FOUND"
+                    }
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:ListBucketVersions"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Bucket",
+                      "Arn"
+                    ]
+                  },
+                  "Condition": {
+                    "StringLike": {
+                      "s3:prefix": "quarantine/*"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Scope",
+            "Value": "FILE-01"
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "BucketName": {
+      "Value": {
+        "Ref": "Bucket"
+      }
+    },
+    "MalwarePlanId": {
+      "Value": {
+        "Fn::GetAtt": [
+          "MalwarePlan",
+          "MalwareProtectionPlanId"
+        ]
+      }
+    },
+    "Region": {
+      "Value": {
+        "Ref": "AWS::Region"
+      }
+    },
+    "Account": {
+      "Value": {
+        "Ref": "AWS::AccountId"
+      }
+    },
+    "ScanRoleArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ScanRole",
+          "Arn"
+        ]
+      }
+    },
+    "FileRoleArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "FileRole",
+          "Arn"
+        ]
+      }
+    }
+  }
+}

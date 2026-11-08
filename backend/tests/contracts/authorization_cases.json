@@ -1,0 +1,3056 @@
+{
+  "contract_version": 1,
+  "scope": "AUTH-03 policy foundation; business endpoints integrate in owning feature tasks",
+  "cases": [
+    {
+      "id": "SEC-ACCESS-001",
+      "name": "employee cannot read colleague conversation",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "conversation",
+          "object_id": "ceb8e4d4-116d-5dfa-9f87-b01bf70cd94d"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-002",
+      "name": "employee cannot read colleague draft",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "draft",
+          "object_id": "79c6eb05-ef51-5b7c-8625-0e0ca8a3f9d7"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-003",
+      "name": "employee cannot read colleague trip",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "trip",
+          "object_id": "4ed9c642-f59f-5db1-997c-09ab2e706683"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-004",
+      "name": "employee cannot read colleague claim",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "claim",
+          "object_id": "75d30530-23a6-5535-b434-c729800df900"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-005",
+      "name": "employee cannot read colleague receipt",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "receipt",
+          "object_id": "979dc76c-047f-55ba-a2fe-e040ed3ba608"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-006",
+      "name": "admin cannot read colleague conversation",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "conversation",
+          "object_id": "ceb8e4d4-116d-5dfa-9f87-b01bf70cd94d"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-007",
+      "name": "admin cannot read colleague draft",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "draft",
+          "object_id": "79c6eb05-ef51-5b7c-8625-0e0ca8a3f9d7"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-008",
+      "name": "admin cannot read colleague trip",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "trip",
+          "object_id": "4ed9c642-f59f-5db1-997c-09ab2e706683"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-009",
+      "name": "admin cannot read colleague claim",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "claim",
+          "object_id": "75d30530-23a6-5535-b434-c729800df900"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-010",
+      "name": "admin cannot read colleague receipt",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "receipt",
+          "object_id": "979dc76c-047f-55ba-a2fe-e040ed3ba608"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-011",
+      "name": "manager cannot read colleague conversation",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "knowledge_manager",
+            "scope_kind": "knowledge_collection",
+            "scope_ref": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "conversation",
+          "object_id": "ceb8e4d4-116d-5dfa-9f87-b01bf70cd94d"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-012",
+      "name": "manager cannot read colleague draft",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "knowledge_manager",
+            "scope_kind": "knowledge_collection",
+            "scope_ref": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "draft",
+          "object_id": "79c6eb05-ef51-5b7c-8625-0e0ca8a3f9d7"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-013",
+      "name": "manager cannot read colleague trip",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "knowledge_manager",
+            "scope_kind": "knowledge_collection",
+            "scope_ref": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "trip",
+          "object_id": "4ed9c642-f59f-5db1-997c-09ab2e706683"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-014",
+      "name": "manager cannot read colleague claim",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "knowledge_manager",
+            "scope_kind": "knowledge_collection",
+            "scope_ref": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "claim",
+          "object_id": "75d30530-23a6-5535-b434-c729800df900"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-015",
+      "name": "manager cannot read colleague receipt",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "knowledge_manager",
+            "scope_kind": "knowledge_collection",
+            "scope_ref": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "receipt",
+          "object_id": "979dc76c-047f-55ba-a2fe-e040ed3ba608"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-016",
+      "name": "publisher cannot read colleague conversation",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "process_owner",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "conversation",
+          "object_id": "ceb8e4d4-116d-5dfa-9f87-b01bf70cd94d"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-017",
+      "name": "publisher cannot read colleague draft",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "process_owner",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "draft",
+          "object_id": "79c6eb05-ef51-5b7c-8625-0e0ca8a3f9d7"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-018",
+      "name": "publisher cannot read colleague trip",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "process_owner",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "trip",
+          "object_id": "4ed9c642-f59f-5db1-997c-09ab2e706683"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-019",
+      "name": "publisher cannot read colleague claim",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "process_owner",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "claim",
+          "object_id": "75d30530-23a6-5535-b434-c729800df900"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-020",
+      "name": "publisher cannot read colleague receipt",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "process_owner",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "receipt",
+          "object_id": "979dc76c-047f-55ba-a2fe-e040ed3ba608"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-021",
+      "name": "approver cannot read colleague conversation",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "approver",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "conversation",
+          "object_id": "ceb8e4d4-116d-5dfa-9f87-b01bf70cd94d"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-022",
+      "name": "approver cannot read colleague draft",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "approver",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "draft",
+          "object_id": "79c6eb05-ef51-5b7c-8625-0e0ca8a3f9d7"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-023",
+      "name": "approver cannot read colleague trip",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "approver",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "trip",
+          "object_id": "4ed9c642-f59f-5db1-997c-09ab2e706683"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-024",
+      "name": "approver cannot read colleague claim",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "approver",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "claim",
+          "object_id": "75d30530-23a6-5535-b434-c729800df900"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-025",
+      "name": "approver cannot read colleague receipt",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "approver",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "receipt",
+          "object_id": "979dc76c-047f-55ba-a2fe-e040ed3ba608"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-026",
+      "name": "operator cannot read colleague conversation",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "operator_scoped",
+            "scope_kind": "operations",
+            "scope_ref": "job_metadata"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "conversation",
+          "object_id": "ceb8e4d4-116d-5dfa-9f87-b01bf70cd94d"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-027",
+      "name": "operator cannot read colleague draft",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "operator_scoped",
+            "scope_kind": "operations",
+            "scope_ref": "job_metadata"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "draft",
+          "object_id": "79c6eb05-ef51-5b7c-8625-0e0ca8a3f9d7"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-028",
+      "name": "operator cannot read colleague trip",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "operator_scoped",
+            "scope_kind": "operations",
+            "scope_ref": "job_metadata"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "trip",
+          "object_id": "4ed9c642-f59f-5db1-997c-09ab2e706683"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-029",
+      "name": "operator cannot read colleague claim",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "operator_scoped",
+            "scope_kind": "operations",
+            "scope_ref": "job_metadata"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "claim",
+          "object_id": "75d30530-23a6-5535-b434-c729800df900"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-030",
+      "name": "operator cannot read colleague receipt",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "operator_scoped",
+            "scope_kind": "operations",
+            "scope_ref": "job_metadata"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "receipt",
+          "object_id": "979dc76c-047f-55ba-a2fe-e040ed3ba608"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-031",
+      "name": "owner reads conversation",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "conversation",
+          "object_id": "ceb8e4d4-116d-5dfa-9f87-b01bf70cd94d"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-032",
+      "name": "owner reads draft",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "draft",
+          "object_id": "79c6eb05-ef51-5b7c-8625-0e0ca8a3f9d7"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-033",
+      "name": "owner reads action",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "action",
+          "object_id": "bd4921a8-7cf8-5d93-9043-ccd32c962b12"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-034",
+      "name": "owner reads trip",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "trip",
+          "object_id": "4ed9c642-f59f-5db1-997c-09ab2e706683"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-035",
+      "name": "owner reads claim",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "claim",
+          "object_id": "75d30530-23a6-5535-b434-c729800df900"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-036",
+      "name": "owner reads receipt",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "receipt",
+          "object_id": "979dc76c-047f-55ba-a2fe-e040ed3ba608"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-037",
+      "name": "owner edits draft",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "draft",
+          "object_id": "79c6eb05-ef51-5b7c-8625-0e0ca8a3f9d7"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b"
+      },
+      "action": "write",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-038",
+      "name": "foreign tenant with same global owner",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+          "kind": "draft",
+          "object_id": "fc75c862-a089-5583-bed9-15fe1e2662a6"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b"
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-039",
+      "name": "missing object",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": null,
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-040",
+      "name": "assigned reviewer reads",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "approver",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "claim",
+          "object_id": "75d30530-23a6-5535-b434-c729800df900"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "active_reviewer_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "active_stage": true,
+        "relation_verified": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-041",
+      "name": "assigned reviewer decides",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "approver",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "claim",
+          "object_id": "75d30530-23a6-5535-b434-c729800df900"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "active_reviewer_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "active_stage": true,
+        "relation_verified": true
+      },
+      "action": "decide",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-042",
+      "name": "admin plus assigned reviewer",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          },
+          {
+            "role": "approver",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "claim",
+          "object_id": "75d30530-23a6-5535-b434-c729800df900"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "active_reviewer_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "active_stage": true,
+        "relation_verified": true
+      },
+      "action": "decide",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-043",
+      "name": "role without stage assignment",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "approver",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "claim",
+          "object_id": "75d30530-23a6-5535-b434-c729800df900"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "active_stage": true,
+        "relation_verified": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-044",
+      "name": "stage moved",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "approver",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "claim",
+          "object_id": "75d30530-23a6-5535-b434-c729800df900"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "active_reviewer_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "active_stage": false,
+        "relation_verified": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-045",
+      "name": "verifier unavailable facts",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "approver",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "claim",
+          "object_id": "75d30530-23a6-5535-b434-c729800df900"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "active_reviewer_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "active_stage": true,
+        "relation_verified": false
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-046",
+      "name": "employee approver owner cannot self approve",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          },
+          {
+            "role": "approver",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "claim",
+          "object_id": "75d30530-23a6-5535-b434-c729800df900"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "active_reviewer_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "active_stage": true,
+        "relation_verified": true
+      },
+      "action": "decide",
+      "changed_fields": [],
+      "expected_status": 403
+    },
+    {
+      "id": "SEC-ACCESS-047",
+      "name": "combined admin cannot self approve",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          },
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          },
+          {
+            "role": "approver",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "claim",
+          "object_id": "75d30530-23a6-5535-b434-c729800df900"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "active_reviewer_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "active_stage": true,
+        "relation_verified": true
+      },
+      "action": "decide",
+      "changed_fields": [],
+      "expected_status": 403
+    },
+    {
+      "id": "SEC-ACCESS-048",
+      "name": "unbound receipt denied",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "receipt",
+          "object_id": "979dc76c-047f-55ba-a2fe-e040ed3ba608"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "relation_verified": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-049",
+      "name": "explicit member ACL reads",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "document",
+          "object_id": "24da4832-0698-5673-9365-daf6811059dd"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "collection_id": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f",
+        "published": true,
+        "acl": [
+          {
+            "permission": "read",
+            "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094"
+          }
+        ]
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-050",
+      "name": "ACL does not publish",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "document",
+          "object_id": "24da4832-0698-5673-9365-daf6811059dd"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "collection_id": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f",
+        "published": true,
+        "acl": [
+          {
+            "permission": "read",
+            "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094"
+          }
+        ]
+      },
+      "action": "publish",
+      "changed_fields": [],
+      "expected_status": 403
+    },
+    {
+      "id": "SEC-ACCESS-051",
+      "name": "unpublished read ACL denied",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "document",
+          "object_id": "24da4832-0698-5673-9365-daf6811059dd"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "collection_id": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f",
+        "published": false,
+        "acl": [
+          {
+            "permission": "read",
+            "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094"
+          }
+        ]
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-052",
+      "name": "withdrawn overrides manager",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "knowledge_manager",
+            "scope_kind": "knowledge_collection",
+            "scope_ref": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "document",
+          "object_id": "24da4832-0698-5673-9365-daf6811059dd"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "collection_id": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f",
+        "published": true,
+        "acl": [
+          {
+            "permission": "read",
+            "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094"
+          }
+        ],
+        "withdrawn": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-053",
+      "name": "manager own collection publish",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "knowledge_manager",
+            "scope_kind": "knowledge_collection",
+            "scope_ref": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "document",
+          "object_id": "24da4832-0698-5673-9365-daf6811059dd"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "collection_id": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f",
+        "published": true,
+        "acl": [
+          {
+            "permission": "read",
+            "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094"
+          }
+        ]
+      },
+      "action": "publish",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-054",
+      "name": "manager wrong collection",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "knowledge_manager",
+            "scope_kind": "knowledge_collection",
+            "scope_ref": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "document",
+          "object_id": "24da4832-0698-5673-9365-daf6811059dd"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "collection_id": "9f7ced9e-cd97-584d-ac2f-8abecd62ab98",
+        "published": true,
+        "acl": []
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-055",
+      "name": "admin no implicit document",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "document",
+          "object_id": "24da4832-0698-5673-9365-daf6811059dd"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "collection_id": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f",
+        "published": true,
+        "acl": []
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-056",
+      "name": "operator no implicit document",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "operator_scoped",
+            "scope_kind": "operations",
+            "scope_ref": "job_metadata"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "document",
+          "object_id": "24da4832-0698-5673-9365-daf6811059dd"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "collection_id": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f",
+        "published": true,
+        "acl": []
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-057",
+      "name": "role ACL requires exact scope",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "document",
+          "object_id": "24da4832-0698-5673-9365-daf6811059dd"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "collection_id": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f",
+        "published": true,
+        "acl": [
+          {
+            "permission": "read",
+            "role": {
+              "role": "employee",
+              "scope_kind": "tenant",
+              "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+            }
+          }
+        ]
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-058",
+      "name": "role ACL different tenant",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "document",
+          "object_id": "24da4832-0698-5673-9365-daf6811059dd"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "collection_id": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f",
+        "published": true,
+        "acl": [
+          {
+            "permission": "read",
+            "role": {
+              "role": "employee",
+              "scope_kind": "tenant",
+              "scope_ref": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9"
+            }
+          }
+        ]
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-059",
+      "name": "combined manager and publisher do not widen collection",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "knowledge_manager",
+            "scope_kind": "knowledge_collection",
+            "scope_ref": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f"
+          },
+          {
+            "role": "process_owner",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "document",
+          "object_id": "24da4832-0698-5673-9365-daf6811059dd"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "collection_id": "9f7ced9e-cd97-584d-ac2f-8abecd62ab98",
+        "published": true,
+        "acl": []
+      },
+      "action": "publish",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-060",
+      "name": "publisher publishes process",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "process_owner",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "policy_package",
+          "object_id": "ce0da9c8-d8c2-5a10-bf43-b38969ebe572"
+        },
+        "version": 1,
+        "access_revision": 1
+      },
+      "action": "publish",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-061",
+      "name": "admin cannot publish rules",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "policy_package",
+          "object_id": "ce0da9c8-d8c2-5a10-bf43-b38969ebe572"
+        },
+        "version": 1,
+        "access_revision": 1
+      },
+      "action": "publish",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-062",
+      "name": "manager cannot publish rules",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "knowledge_manager",
+            "scope_kind": "knowledge_collection",
+            "scope_ref": "d8e4de89-9a59-5d0c-a540-1f6806ec4d2f"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "policy_package",
+          "object_id": "ce0da9c8-d8c2-5a10-bf43-b38969ebe572"
+        },
+        "version": 1,
+        "access_revision": 1
+      },
+      "action": "publish",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-063",
+      "name": "admin safe config",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "tenant_config",
+          "object_id": "dc9a958e-163e-5ddb-9672-3545d8552c43"
+        },
+        "version": 1,
+        "access_revision": 1
+      },
+      "action": "configure",
+      "changed_fields": [
+        "assistant_name"
+      ],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-064",
+      "name": "config cannot change roles",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "tenant_config",
+          "object_id": "dc9a958e-163e-5ddb-9672-3545d8552c43"
+        },
+        "version": 1,
+        "access_revision": 1
+      },
+      "action": "configure",
+      "changed_fields": [
+        "roles"
+      ],
+      "expected_status": 403
+    },
+    {
+      "id": "SEC-ACCESS-065",
+      "name": "config cannot change oidc_issuer",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "tenant_config",
+          "object_id": "dc9a958e-163e-5ddb-9672-3545d8552c43"
+        },
+        "version": 1,
+        "access_revision": 1
+      },
+      "action": "configure",
+      "changed_fields": [
+        "oidc_issuer"
+      ],
+      "expected_status": 403
+    },
+    {
+      "id": "SEC-ACCESS-066",
+      "name": "config cannot change active_routing",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "tenant_config",
+          "object_id": "dc9a958e-163e-5ddb-9672-3545d8552c43"
+        },
+        "version": 1,
+        "access_revision": 1
+      },
+      "action": "configure",
+      "changed_fields": [
+        "active_routing"
+      ],
+      "expected_status": 403
+    },
+    {
+      "id": "SEC-ACCESS-067",
+      "name": "config cannot change approver",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "tenant_config",
+          "object_id": "dc9a958e-163e-5ddb-9672-3545d8552c43"
+        },
+        "version": 1,
+        "access_revision": 1
+      },
+      "action": "configure",
+      "changed_fields": [
+        "approver"
+      ],
+      "expected_status": 403
+    },
+    {
+      "id": "SEC-ACCESS-068",
+      "name": "config cannot change security_policy",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "tenant_config",
+          "object_id": "dc9a958e-163e-5ddb-9672-3545d8552c43"
+        },
+        "version": 1,
+        "access_revision": 1
+      },
+      "action": "configure",
+      "changed_fields": [
+        "security_policy"
+      ],
+      "expected_status": 403
+    },
+    {
+      "id": "SEC-ACCESS-069",
+      "name": "config cannot change tool_permissions",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "tenant_config",
+          "object_id": "dc9a958e-163e-5ddb-9672-3545d8552c43"
+        },
+        "version": 1,
+        "access_revision": 1
+      },
+      "action": "configure",
+      "changed_fields": [
+        "tool_permissions"
+      ],
+      "expected_status": 403
+    },
+    {
+      "id": "SEC-ACCESS-070",
+      "name": "admin membership metadata",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "membership",
+          "object_id": "b2950eaa-f509-58a4-b793-2c4b3003dd0e"
+        },
+        "version": 1,
+        "access_revision": 1
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-071",
+      "name": "operator job metadata",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "operator_scoped",
+            "scope_kind": "operations",
+            "scope_ref": "job_metadata"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "job_metadata",
+          "object_id": "2c4624d0-aebb-52b3-9cac-05d91bd47e72"
+        },
+        "version": 1,
+        "access_revision": 1
+      },
+      "action": "operate",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-072",
+      "name": "operator invalid scope",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "operator_scoped",
+            "scope_kind": "operations",
+            "scope_ref": "*"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "job_metadata",
+          "object_id": "2c4624d0-aebb-52b3-9cac-05d91bd47e72"
+        },
+        "version": 1,
+        "access_revision": 1
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-073",
+      "name": "unknown role never grants",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "superuser",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "conversation",
+          "object_id": "ceb8e4d4-116d-5dfa-9f87-b01bf70cd94d"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b"
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-074",
+      "name": "wildcard employee no authority",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "*"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "conversation",
+          "object_id": "ceb8e4d4-116d-5dfa-9f87-b01bf70cd94d"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b"
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-075",
+      "name": "tenant role alias no authority",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "all",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "conversation",
+          "object_id": "ceb8e4d4-116d-5dfa-9f87-b01bf70cd94d"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b"
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-076",
+      "name": "unknown action denied on visible",
+      "subject": {
+        "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "f6d1d298-71d7-577d-82b5-a7565df17094",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "724945e2-1008-5b44-831d-b8ec8e46d406"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "draft",
+          "object_id": "79c6eb05-ef51-5b7c-8625-0e0ca8a3f9d7"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b"
+      },
+      "action": "delete_everything",
+      "changed_fields": [],
+      "expected_status": 403
+    },
+    {
+      "id": "SEC-ACCESS-077",
+      "name": "tenant B: owner reads conversation",
+      "subject": {
+        "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+          "kind": "conversation",
+          "object_id": "ceb8e4d4-116d-5dfa-9f87-b01bf70cd94d"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "relation_verified": true,
+        "receipt_revision_bound": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-078",
+      "name": "tenant B: owner edits draft",
+      "subject": {
+        "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+          "kind": "draft",
+          "object_id": "79c6eb05-ef51-5b7c-8625-0e0ca8a3f9d7"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b"
+      },
+      "action": "write",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-079",
+      "name": "tenant B: foreign tenant with same global owner",
+      "subject": {
+        "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "724945e2-1008-5b44-831d-b8ec8e46d406",
+          "kind": "draft",
+          "object_id": "fc75c862-a089-5583-bed9-15fe1e2662a6"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b"
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-080",
+      "name": "tenant B: assigned reviewer decides",
+      "subject": {
+        "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "approver",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+          "kind": "claim",
+          "object_id": "75d30530-23a6-5535-b434-c729800df900"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "active_reviewer_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "active_stage": true,
+        "relation_verified": true
+      },
+      "action": "decide",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-081",
+      "name": "tenant B: stage moved",
+      "subject": {
+        "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "approver",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+          "kind": "claim",
+          "object_id": "75d30530-23a6-5535-b434-c729800df900"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "4ef46650-f543-5fb0-841b-aef2bddeef0e",
+        "active_reviewer_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "active_stage": false,
+        "relation_verified": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-082",
+      "name": "tenant B: employee approver owner cannot self approve",
+      "subject": {
+        "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9"
+          },
+          {
+            "role": "approver",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+          "kind": "claim",
+          "object_id": "75d30530-23a6-5535-b434-c729800df900"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "active_reviewer_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "active_stage": true,
+        "relation_verified": true
+      },
+      "action": "decide",
+      "changed_fields": [],
+      "expected_status": 403
+    },
+    {
+      "id": "SEC-ACCESS-083",
+      "name": "tenant B: explicit member ACL reads",
+      "subject": {
+        "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+          "kind": "document",
+          "object_id": "24da4832-0698-5673-9365-daf6811059dd"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "collection_id": "60d3785d-d524-5db6-ad4a-b96368e1e2a6",
+        "published": true,
+        "acl": [
+          {
+            "permission": "read",
+            "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6"
+          }
+        ]
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-084",
+      "name": "tenant B: ACL does not publish",
+      "subject": {
+        "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "employee",
+            "scope_kind": "tenant",
+            "scope_ref": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+          "kind": "document",
+          "object_id": "24da4832-0698-5673-9365-daf6811059dd"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "collection_id": "60d3785d-d524-5db6-ad4a-b96368e1e2a6",
+        "published": true,
+        "acl": [
+          {
+            "permission": "read",
+            "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6"
+          }
+        ]
+      },
+      "action": "publish",
+      "changed_fields": [],
+      "expected_status": 403
+    },
+    {
+      "id": "SEC-ACCESS-085",
+      "name": "tenant B: withdrawn overrides manager",
+      "subject": {
+        "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "knowledge_manager",
+            "scope_kind": "knowledge_collection",
+            "scope_ref": "60d3785d-d524-5db6-ad4a-b96368e1e2a6"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+          "kind": "document",
+          "object_id": "24da4832-0698-5673-9365-daf6811059dd"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "collection_id": "60d3785d-d524-5db6-ad4a-b96368e1e2a6",
+        "published": true,
+        "acl": [
+          {
+            "permission": "read",
+            "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6"
+          }
+        ],
+        "withdrawn": true
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-086",
+      "name": "tenant B: manager own collection publish",
+      "subject": {
+        "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "knowledge_manager",
+            "scope_kind": "knowledge_collection",
+            "scope_ref": "60d3785d-d524-5db6-ad4a-b96368e1e2a6"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+          "kind": "document",
+          "object_id": "24da4832-0698-5673-9365-daf6811059dd"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "collection_id": "60d3785d-d524-5db6-ad4a-b96368e1e2a6",
+        "published": true,
+        "acl": [
+          {
+            "permission": "read",
+            "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6"
+          }
+        ]
+      },
+      "action": "publish",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-087",
+      "name": "tenant B: manager wrong collection",
+      "subject": {
+        "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "knowledge_manager",
+            "scope_kind": "knowledge_collection",
+            "scope_ref": "60d3785d-d524-5db6-ad4a-b96368e1e2a6"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+          "kind": "document",
+          "object_id": "24da4832-0698-5673-9365-daf6811059dd"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "collection_id": "ec5d5448-203d-5934-8df7-2d26b1b50efb",
+        "published": true,
+        "acl": []
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-088",
+      "name": "tenant B: admin no implicit document",
+      "subject": {
+        "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+          "kind": "document",
+          "object_id": "24da4832-0698-5673-9365-daf6811059dd"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "collection_id": "60d3785d-d524-5db6-ad4a-b96368e1e2a6",
+        "published": true,
+        "acl": []
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-089",
+      "name": "tenant B: operator no implicit document",
+      "subject": {
+        "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "operator_scoped",
+            "scope_kind": "operations",
+            "scope_ref": "job_metadata"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+          "kind": "document",
+          "object_id": "24da4832-0698-5673-9365-daf6811059dd"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "collection_id": "60d3785d-d524-5db6-ad4a-b96368e1e2a6",
+        "published": true,
+        "acl": []
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    },
+    {
+      "id": "SEC-ACCESS-090",
+      "name": "tenant B: publisher publishes process",
+      "subject": {
+        "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "process_owner",
+            "scope_kind": "process",
+            "scope_ref": "reimbursement"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+          "kind": "policy_package",
+          "object_id": "ce0da9c8-d8c2-5a10-bf43-b38969ebe572"
+        },
+        "version": 1,
+        "access_revision": 1
+      },
+      "action": "publish",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-091",
+      "name": "tenant B: admin safe config",
+      "subject": {
+        "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+          "kind": "tenant_config",
+          "object_id": "dc9a958e-163e-5ddb-9672-3545d8552c43"
+        },
+        "version": 1,
+        "access_revision": 1
+      },
+      "action": "configure",
+      "changed_fields": [
+        "assistant_name"
+      ],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-092",
+      "name": "tenant B: config cannot change roles",
+      "subject": {
+        "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "tenant_admin",
+            "scope_kind": "tenant",
+            "scope_ref": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+          "kind": "tenant_config",
+          "object_id": "dc9a958e-163e-5ddb-9672-3545d8552c43"
+        },
+        "version": 1,
+        "access_revision": 1
+      },
+      "action": "configure",
+      "changed_fields": [
+        "roles"
+      ],
+      "expected_status": 403
+    },
+    {
+      "id": "SEC-ACCESS-093",
+      "name": "tenant B: operator job metadata",
+      "subject": {
+        "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "operator_scoped",
+            "scope_kind": "operations",
+            "scope_ref": "job_metadata"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+          "kind": "job_metadata",
+          "object_id": "2c4624d0-aebb-52b3-9cac-05d91bd47e72"
+        },
+        "version": 1,
+        "access_revision": 1
+      },
+      "action": "operate",
+      "changed_fields": [],
+      "expected_status": 0
+    },
+    {
+      "id": "SEC-ACCESS-094",
+      "name": "tenant B: unknown role never grants",
+      "subject": {
+        "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+        "principal_id": "5e916555-214c-591b-897c-a12794f2130b",
+        "membership_id": "0c105b0f-ebcb-565a-a160-1dbb24b4cad6",
+        "access_revision": 1,
+        "grants": [
+          {
+            "role": "superuser",
+            "scope_kind": "tenant",
+            "scope_ref": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9"
+          }
+        ]
+      },
+      "resource": {
+        "ref": {
+          "tenant_id": "590a0b12-ec5c-5fb2-a3eb-d2fdb4b778f9",
+          "kind": "conversation",
+          "object_id": "ceb8e4d4-116d-5dfa-9f87-b01bf70cd94d"
+        },
+        "version": 1,
+        "access_revision": 1,
+        "owner_id": "5e916555-214c-591b-897c-a12794f2130b"
+      },
+      "action": "read",
+      "changed_fields": [],
+      "expected_status": 404
+    }
+  ]
+}

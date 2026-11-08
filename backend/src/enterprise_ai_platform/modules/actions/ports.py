@@ -1,0 +1,16 @@
+from typing import Protocol
+from enterprise_ai_platform.modules.actions.domain import ActionFailure,VerifiedDecisionSource
+
+
+class ActionRepository(Protocol):
+    async def call(self,token:str,operation:str,payload:dict)->dict: ...
+
+
+class DecisionSources(Protocol):
+    async def read(self,context:dict,claim_id:str)->VerifiedDecisionSource: ...
+
+
+class ActionPort(Protocol):
+    async def confirm(self,session,headers,draft_id,values)->dict: ...
+    async def decide(self,session,headers,claim_id,values)->dict: ...
+    async def read(self,session,operation_id)->dict: ...

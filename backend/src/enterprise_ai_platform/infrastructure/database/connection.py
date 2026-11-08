@@ -182,6 +182,7 @@ class RuntimeDatabase:
                 await self.pool.close(timeout=self.limits.cleanup_seconds)
         try:
             await finish_cleanup(close_pool())
+            if getattr(self,'security_journal',None) is not None:self.security_journal.close()
         except (psycopg.Error, TimeoutError):
             raise DatabaseUnavailable() from None
 
@@ -216,6 +217,7 @@ class RuntimeDatabase:
             raise ValueError("A backend tenant/actor context is required.")
         connection = None
         discard = False
+        journal_events = []
         try:
             async with asyncio.timeout(self.limits.transaction_seconds):
                 async with asyncio.timeout(self.limits.checkout_seconds):
@@ -232,6 +234,15 @@ class RuntimeDatabase:
                          "" if context is None else str(context.actor_id)),
                     )
                     yield connection
+                    if getattr(self,'security_journal',None) is not None:
+                        journal_events=await self.security_journal.before_commit(connection,self.schema)
+                        # Preserve the original browser authority after new I/O.
+                        from enterprise_ai_platform.modules.identity.ports import browser_read_scope
+                        from enterprise_ai_platform.infrastructure.database.browser_context import context_guard
+                        browser=browser_read_scope.get()
+                        if journal_events and browser is not None and browser.token_hash:
+                            await context_guard(self,connection,browser.token_hash,browser.expected)
+                if journal_events:await self.security_journal.after_commit(journal_events)
         except asyncio.CancelledError:
             discard = True
             raise

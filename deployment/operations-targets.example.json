@@ -1,0 +1,15 @@
+{
+  "environment": "REPLACE_ENVIRONMENT",
+  "owner": "William",
+  "availability_target": null,
+  "rpo_seconds": null,
+  "rto_seconds": null,
+  "max_queue_lag_seconds": null,
+  "monthly_budget_usd": null,
+  "node_count": 1,
+  "app_replicas": 1,
+  "worker_replicas": 1,
+  "backup_retention_days": null,
+  "certificate_rotation_days": 30,
+  "acceptance_decision": "Not yet evaluated by owner"
+}

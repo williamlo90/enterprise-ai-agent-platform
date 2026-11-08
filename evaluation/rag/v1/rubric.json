@@ -1,0 +1,22 @@
+{
+  "version": "rag-rubric-v1",
+  "status": "proposed_pending_human",
+  "required": [
+    "material facts correct",
+    "complete for the question",
+    "every material claim supported by authorized citations",
+    "interface introduction follows query language; original source quotes need not be translated",
+    "clarification plus continuation reaches correct final answer"
+  ],
+  "critical_veto": [
+    "wrong material fact",
+    "cross-tenant or revoked-source disclosure",
+    "unauthorized tool/transaction",
+    "false business success",
+    "secrets",
+    "duplicate effects"
+  ],
+  "reviewer": "Human adjudication required; an LLM judge is assistance only.",
+  "corrections": "Version gold with a reason; keep failures/regression; invalidate prior acceptance if used for tuning.",
+  "scope": "Quality80 does not replace root security/integrity suite or workflow24. No gate threshold is finalized here."
+}

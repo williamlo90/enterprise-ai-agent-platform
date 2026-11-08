@@ -1,0 +1,20 @@
+import {act,render,screen,waitFor} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import {createMemoryRouter} from 'react-router';
+import {afterEach,expect,it} from 'vitest';
+import {App} from '../../src/app/App';
+import {AuthScreen} from '../../src/app/AuthScreen';
+import {AuthController} from '../../src/app/auth-controller';
+import {ApiCoordinator} from '../../src/app/api-coordinator';
+import {ApiTransport} from '../../src/api/transport';
+import type {FetchPort} from '../../src/api/transport';
+import {fixture,json} from './api-fixtures';
+const id='77777777-7777-4777-8777-777777777777';const item='88888888-8888-4888-8888-888888888888';const binding={'X-EAI-Context-Binding':'a'.repeat(64)};
+const original={id,kind:'submission',trip_id:id,claim_id:null,claim_version:null,claim_revision:null,state:'editable',version:1,content:{currency:'SGD',items:[],receipts:[]}};
+const trip={id,state:'completed',employee_ref:'Employee fixture',start_date:'2026-11-01',end_date:'2026-11-02',items:[{id:item,expense_date:'2026-11-01',category:'travel',declared_amount_minor:500,currency:'SGD'}]};
+const dispose:(()=>void)[]=[];
+afterEach(()=>{dispose.splice(0).forEach(f=>f());});
+function setup(custom?:FetchPort){const writes:{path:string;body:unknown}[]=[];let tail:Promise<unknown>=Promise.resolve();const api=new ApiCoordinator(new ApiTransport(async(path,init)=>{if(path.endsWith('/me'))return json(fixture());if(init.method==='POST'||init.method==='PATCH')writes.push({path,body:JSON.parse(String(init.body))});if(custom)return custom(path,init);if(path==='/api/v1/drafts/'+id)return json(original,200,binding);if(path==='/api/v1/trips/'+id)return json({trip},200,binding);return json({},422,binding);}),{request:async(_n,_o,work)=>{const next=tail.then(work);tail=next.catch(()=>{});return next;}});const auth=new AuthController(api);const router=createMemoryRouter([{path:'*',element:<AuthScreen auth={auth} api={api}/>}],{initialEntries:['/reimbursements/drafts/'+id]});render(<App router={router}/>);dispose.push(()=>{router.dispose();auth.dispose();api.dispose();});return {api,router,writes};}
+it('labels currency explicitly and rejects fractional/overflow money before dispatch',async()=>{const {writes}=setup();const u=userEvent.setup();await screen.findByRole('combobox',{name:'Mata uang'});await u.click(screen.getByRole('checkbox',{name:/^travel/}));await u.clear(screen.getByLabelText(/^Nominal pengajuan untuk/));await u.type(screen.getByLabelText(/^Nominal pengajuan untuk/),'1.001');await u.click(screen.getByRole('button',{name:'Simpan draft'}));await screen.findByRole('alert');expect(writes).toHaveLength(0);expect((screen.getByRole('button',{name:'Periksa preview dan aturan'}) as HTMLButtonElement).disabled).toBe(true);});
+it('save CAS conflict blocks edits and cannot silently substitute a newer version',async()=>{const {writes}=setup(async(path,init)=>{if(init.method==='PATCH')return json({error:{code:'conflict'}},409,binding);return json(path.includes('/trips/')?{trip}:original,200,binding);});const u=userEvent.setup();await screen.findByRole('combobox',{name:'Mata uang'});await u.click(screen.getByRole('checkbox',{name:/^travel/}));await u.click(screen.getByRole('button',{name:'Simpan draft'}));await screen.findByRole('heading',{name:'Data telah berubah'});expect(writes).toHaveLength(1);expect(writes[0].body).toMatchObject({expected_version:1});expect(screen.getByRole('combobox',{name:'Mata uang'}).matches(':disabled')).toBe(true);});
+it('context invalidation removes the loaded private reimbursement form',async()=>{const {api}=setup();await screen.findByRole('heading',{name:'Rincian pengajuan'});await act(async()=>api.invalidate());await waitFor(()=>expect(screen.queryByRole('heading',{name:'Rincian pengajuan'})).toBeNull());expect(screen.queryByLabelText('Mata uang')).toBeNull();});

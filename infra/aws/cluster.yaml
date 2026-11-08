@@ -1,0 +1,33 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: enterprise-ai-dev
+  region: ap-southeast-1
+  # Operator chooses a currently supported EKS version before creating cluster.
+  version: "REPLACE_SUPPORTED_EKS_VERSION"
+iam:
+  withOIDC: true
+vpc:
+  clusterEndpoints:
+    publicAccess: true
+    privateAccess: true
+  # Replace with the operator/VPN source CIDR; do not expose administration to all.
+  publicAccessCIDRs: ["REPLACE_OPERATOR_CIDR"]
+managedNodeGroups:
+  - name: app
+    instanceType: t3.large
+    desiredCapacity: 1
+    minSize: 1
+    maxSize: 2
+    privateNetworking: true
+    disableIMDSv1: true
+    # Parser never gets a pod service token or unrestricted network.
+    # Configure podPidsLimit=32 on the selected managed node AMI using its
+    # supported node bootstrap mechanism before enabling parser workloads.
+    volumeSize: 40
+    volumeEncrypted: true
+addons:
+  - name: vpc-cni
+    configurationValues: '{"enableNetworkPolicy":"true"}'
+  - name: coredns
+  - name: kube-proxy

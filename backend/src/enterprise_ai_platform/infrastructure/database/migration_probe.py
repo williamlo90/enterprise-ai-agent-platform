@@ -88,8 +88,8 @@ async def verify_migrations(target) -> int:
                 await connection.execute(query("INSERT INTO {s}.membership_roles(tenant_id,id,membership_id,role,scope_kind,scope_ref,granted_by) "
                     "VALUES (%s,%s,%s,'employee','tenant','self',%s)", schema), (tenant, uuid4(), membership, other))
                 await connection.execute(query("INSERT INTO {s}.sessions(id,principal_id,token_hash,csrf_hash,active_tenant_id,expires_at) "
-                    "VALUES (%s,%s,%s,%s,%s,CURRENT_TIMESTAMP+interval '1 hour')", schema),
-                    (uuid4(), principal, "fixture-token-hash", "fixture-csrf-hash", tenant))
+                    "VALUES (%s,%s,%s,%s,%s,CURRENT_TIMESTAMP+interval '8 hours')", schema),
+                    (uuid4(), principal, "a"*64, "b"*64, tenant))
         completed.append(stage)
 
         stage = "filled-upgrade-to-head"
@@ -136,9 +136,9 @@ async def verify_migrations(target) -> int:
             ("unknown-timezone", "UPDATE {s}.tenants SET timezone='Not/AZone' WHERE id=%s", (tenant,), "23503"),
             ("duplicate-identity", "INSERT INTO {s}.principals(id,issuer,subject) VALUES (%s,%s,%s)", (uuid4(), "https://identity.example.test", str(principal)), "23505"),
             ("duplicate-tenant-slug", "UPDATE {s}.tenants SET slug='fixture-a' WHERE id=%s", (second,), "23505"),
-            ("session-wrong-membership", "INSERT INTO {s}.sessions(id,principal_id,token_hash,csrf_hash,active_tenant_id,expires_at) VALUES (%s,%s,'other-hash','csrf',%s,CURRENT_TIMESTAMP+interval '1 hour')", (uuid4(), principal, second), "23503"),
-            ("duplicate-session-hash", "INSERT INTO {s}.sessions(id,principal_id,token_hash,csrf_hash,expires_at) VALUES (%s,%s,'fixture-token-hash','csrf',CURRENT_TIMESTAMP+interval '1 hour')", (uuid4(), principal), "23505"),
-            ("invalid-session-expiry", "INSERT INTO {s}.sessions(id,principal_id,token_hash,csrf_hash,expires_at) VALUES (%s,%s,'new-hash','csrf',CURRENT_TIMESTAMP-interval '1 hour')", (uuid4(), principal), "23514"),
+            ("session-wrong-membership", "INSERT INTO {s}.sessions(id,principal_id,token_hash,csrf_hash,active_tenant_id,expires_at) VALUES (%s,%s,repeat('c',64),repeat('b',64),%s,CURRENT_TIMESTAMP+interval '8 hours')", (uuid4(), principal, second), "23503"),
+            ("duplicate-session-hash", "INSERT INTO {s}.sessions(id,principal_id,token_hash,csrf_hash,expires_at) VALUES (%s,%s,repeat('a',64),repeat('b',64),CURRENT_TIMESTAMP+interval '8 hours')", (uuid4(), principal), "23505"),
+            ("invalid-session-expiry", "INSERT INTO {s}.sessions(id,principal_id,token_hash,csrf_hash,expires_at) VALUES (%s,%s,repeat('e',64),repeat('b',64),CURRENT_TIMESTAMP-interval '1 hour')", (uuid4(), principal), "23514"),
             ("immutable-snapshot-update", "UPDATE {s}.tenant_configs SET assistant_name='Changed' WHERE tenant_id=%s", (tenant,), "55000"),
             ("immutable-snapshot-delete", "DELETE FROM {s}.tenant_configs WHERE tenant_id=%s", (tenant,), "55000"),
             ("immutable-snapshot-truncate", "TRUNCATE {s}.tenant_configs CASCADE", None, "55000"),
@@ -156,7 +156,7 @@ async def verify_migrations(target) -> int:
         stage = "session-before-tenant-selection-and-combined-roles"
         async with direct_connection(target) as connection:
             await connection.execute(query("INSERT INTO {s}.sessions(id,principal_id,token_hash,csrf_hash,expires_at) "
-                "VALUES (%s,%s,'unselected-hash','csrf',CURRENT_TIMESTAMP+interval '1 hour')", schema), (uuid4(), principal))
+                "VALUES (%s,%s,repeat('d',64),repeat('b',64),CURRENT_TIMESTAMP+interval '8 hours')", schema), (uuid4(), principal))
             await connection.execute(query("INSERT INTO {s}.membership_roles(tenant_id,id,membership_id,role,scope_kind,scope_ref,granted_by) "
                 "VALUES (%s,%s,%s,'approver','tenant','self',%s)", schema), (tenant, uuid4(), membership, other))
         completed.append(stage)

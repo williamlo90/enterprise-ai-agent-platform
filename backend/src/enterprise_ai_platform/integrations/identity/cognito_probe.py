@@ -28,6 +28,18 @@ class SafeOidcLog(logging.Filter):
 
 
 def safe_transport_logs():
+    # New SDK child loggers may be created after client construction. Ancestor
+    # filters alone do not sanitize them; chain the record factory once too.
+    current=logging.getLogRecordFactory()
+    if not getattr(current,"_eai_transport_redaction",False):
+        def redacted_record(*args,**kwargs):
+            record=current(*args,**kwargs)
+            if record.name.split(".",1)[0] in {"boto3","botocore","httpx","httpcore","psycopg","psycopg_pool"}:
+                record.msg,record.args="Transport event.",()
+                record.exc_info=record.exc_text=record.stack_info=None
+            return record
+        redacted_record._eai_transport_redaction=True
+        logging.setLogRecordFactory(redacted_record)
     for name in {"boto3", "botocore", "httpx", "httpcore", "httpcore.connection", "httpcore.http11",
                  "httpcore.http2", "httpcore.proxy", "httpcore.socks"} | {
         name for name in logging.Logger.manager.loggerDict if name.startswith(("httpx.", "httpcore.", "botocore.", "boto3."))

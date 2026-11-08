@@ -1,0 +1,11 @@
+{
+  "status": "pending_POL_service_gold_EVAL02",
+  "acceptance_scenarios": 24,
+  "coverage": {
+    "valid": 12,
+    "invalid": 4,
+    "recovery": 4,
+    "hold_unknown": 4
+  },
+  "note": "No accepted workflow gold or business-rule claims are fabricated by the RAG pack."
+}

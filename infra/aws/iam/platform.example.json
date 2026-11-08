@@ -1,0 +1,27 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:InvokeFunction"
+      ],
+      "Resource": [
+        "PLATFORM_JOURNAL_WRITER_ARN"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:GetObjectTagging",
+        "s3:GetObjectVersionTagging"
+      ],
+      "Resource": [
+        "FILES_BUCKET_ARN/*"
+      ]
+    }
+  ]
+}

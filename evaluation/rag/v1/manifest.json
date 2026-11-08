@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "files": {
+    "pack.json": "2254b7ac08826637344e8b925d3f6e06665b9fc467d2302cee276bdcf11f90b3",
+    "rubric.json": "f07f45f5f4ea72579a93c1f38c09723341e225316f154da21b064bb023fb943f",
+    "fixture-config.json": "3e12842c172a16a2c9a9637ee96617f2d1fa2fc6671385a79ec5a09f07b590d2",
+    "workflow-plan.json": "6cd529fe27124656fa9992ce6970775d9a6bbbe2443c6459aa07856fb17c48fb"
+  },
+  "scope": "Offline framework preparation; gold/gates/real embeddings/provider budget remain pending."
+}

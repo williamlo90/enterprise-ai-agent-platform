@@ -1,0 +1,16 @@
+{
+  "platform_url": "REPLACE_MIGRATION_DIRECT_URL_VERIFY_FULL",
+  "service_url": "REPLACE_REFERENCE_MIGRATION_DIRECT_URL_VERIFY_FULL",
+  "files_bucket": "REPLACE_EXISTING_FILES_BUCKET",
+  "backup_bucket": "REPLACE_BACKUP_BUCKET",
+  "reader_arn": "REPLACE_RECOVERY_READER_ARN",
+  "journal_id": "REPLACE_JOURNAL_ID",
+  "restore_platform_url": "REPLACE_ISOLATED_HOST_eai_restore_DATABASE_URL",
+  "restore_service_url": "REPLACE_ISOLATED_HOST_eai_restore_SERVICE_URL",
+  "restore_files_bucket": "eai-restore-REPLACE",
+  "secret_arns": [],
+  "max_files": 1000,
+  "producers_quiesced": false,
+  "platform_writer_arn": "REPLACE_PLATFORM_WRITER_ARN",
+  "reference_writer_arn": "REPLACE_REFERENCE_WRITER_ARN"
+}

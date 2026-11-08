@@ -217,6 +217,93 @@ def test_disabled_lambda_never_reads_credentials_or_logs_input(monkeypatch, capl
     assert result["statusCode"] == 404 and "synthetic-private-marker" not in caplog.text
 
 
+def test_handler_initializes_using_real_botocore_client_without_context_manager(monkeypatch, provider):
+    import boto3
+    from botocore.stub import Stubber
+    from unittest.mock import Mock
+    import enterprise_ai_platform.oidc_spike_lambda as module
+    client = boto3.client("secretsmanager", region_name="ap-southeast-1",
+                          aws_access_key_id="synthetic", aws_secret_access_key="synthetic")
+    closed = Mock(wraps=client.close)
+    monkeypatch.setattr(client, "close", closed)
+    fields = {"OIDC_ISSUER": provider.issuer, "OIDC_CLIENT_ID": provider.client_id,
+              "OIDC_REDIRECT_URI": provider.redirect_uri, "PUBLIC_ORIGIN": provider.public_origin,
+              "OIDC_AUTHORIZATION_ENDPOINT": provider.authorization_endpoint, "OIDC_TOKEN_ENDPOINT": provider.token_endpoint,
+              "OIDC_JWKS_URI": provider.jwks_uri, "SPIKE_ENABLED": "true", "SPIKE_SECRET_ARN": "synthetic-secret",
+              "SPIKE_TABLE_NAME": "eai-oidc-spike-test"}
+    for name, value in fields.items():
+        monkeypatch.setenv(name, value)
+    private = {"client_secret": provider.client_secret, "operator_secret": "A" * 43,
+               "encryption_key": Fernet.generate_key().decode()}
+    with Stubber(client) as stub:
+        stub.add_response("get_secret_value", {"SecretString": json.dumps(private)}, {"SecretId": "synthetic-secret"})
+        monkeypatch.setattr(module.boto3, "client", lambda *args, **kwargs: client)
+        result = handler(event("/health/live"), None)
+        assert result["statusCode"] == 200
+        stub.assert_no_pending_responses()
+    closed.assert_called_once()
+
+
+@pytest.mark.parametrize("injected", [False, True])
+@pytest.mark.parametrize("failure", [False, True])
+def test_store_closes_only_owned_real_sdk_clients_even_on_error(monkeypatch, injected, failure):
+    import boto3
+    from botocore.stub import Stubber
+    from botocore.exceptions import ClientError
+    from unittest.mock import Mock
+    import enterprise_ai_platform.infrastructure.oidc_spike_store as module
+    client = boto3.client("dynamodb", region_name="ap-southeast-1",
+                          aws_access_key_id="synthetic", aws_secret_access_key="synthetic")
+    closed = Mock(wraps=client.close)
+    monkeypatch.setattr(client, "close", closed)
+    with Stubber(client) as stub:
+        params = {"TableName": "eai-oidc-spike-test", "Key": {"pk": {"S": "synthetic"}}}
+        if failure:
+            stub.add_client_error("get_item", service_error_code="AccessDeniedException", expected_params=params)
+        else:
+            stub.add_response("get_item", {"Item": {}}, params)
+        monkeypatch.setattr(module.boto3, "client", lambda *args, **kwargs: client)
+        store = module.DynamoSpikeStore("eai-oidc-spike-test", client=client if injected else None)
+        if failure:
+            with pytest.raises(ClientError):
+                store.call("get_item", **params)
+        else:
+            assert store.call("get_item", **params) == {"Item": {}}
+        stub.assert_no_pending_responses()
+    assert closed.call_count == (0 if injected else 1)
+    if injected:
+        client.close()
+
+
+@pytest.mark.parametrize("error_code, expected", [("AccessDeniedException", "AccessDeniedException"),
+                                                 ("private-marker", "aws_api_error")])
+def test_initialization_diagnostics_never_log_private_error_data(monkeypatch, caplog, error_code, expected):
+    from botocore.exceptions import ClientError
+    import enterprise_ai_platform.oidc_spike_lambda as module
+    monkeypatch.setenv("SPIKE_ENABLED", "true")
+    def fail(*args, **kwargs):
+        raise ClientError({"Error": {"Code": error_code, "Message": "private-marker"}}, "GetSecretValue")
+    monkeypatch.setattr(module.boto3, "client", fail)
+    result = handler({"rawQueryString": "code=private-marker", "headers": {"Cookie": "private-marker"}}, None)
+    assert result["statusCode"] == 503
+    assert "stage=secret_read reason=" + expected in caplog.text
+    assert "private-marker" not in caplog.text and "private-marker" not in result["body"]
+
+
+@pytest.mark.parametrize("known", [True, False])
+def test_initialization_exception_classification_does_not_log_message(monkeypatch, caplog, known):
+    import enterprise_ai_platform.oidc_spike_lambda as module
+    class PrivateException(Exception):
+        pass
+    monkeypatch.setenv("SPIKE_ENABLED", "true")
+    def fail(*args, **kwargs):
+        raise (TypeError if known else PrivateException)("private-marker")
+    monkeypatch.setattr(module.boto3, "client", fail)
+    assert handler({}, None)["statusCode"] == 503
+    assert "reason=" + ("TypeError" if known else "initialization_error") in caplog.text
+    assert "private-marker" not in caplog.text and "PrivateException" not in caplog.text
+
+
 @pytest.mark.parametrize("name", ["iss", "sub", "aud", "exp", "iat", "nonce", "token_use"])
 def test_missing_required_claims_rejected(provider, signing, name):
     value = claims(); value.pop(name)

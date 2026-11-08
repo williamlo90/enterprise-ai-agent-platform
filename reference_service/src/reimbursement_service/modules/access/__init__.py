@@ -1,0 +1,1 @@
+"""Service authorization contracts."""

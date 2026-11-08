@@ -5,7 +5,7 @@ Executable revisions live in the installed Python package at
 They are included in the wheel; this directory does not duplicate SQL sources.
 
 Use `enterprise-ai-migrate status`, `verify`, and `upgrade` from the repository
-root with `--env-file .env`. See [backend instructions](../README.md#migration-dan-foundation-schema-db-02).
+root with `--env-file .env`. See [backend instructions](../README.md#connected-operation).
 `verify` creates and cleans disposable test schemas; `upgrade` applies the
 packaged revision chain to the application schema `platform`.
 
@@ -18,4 +18,5 @@ Use qualified objects and transactional SQL. Do not
 include BEGIN/COMMIT, ROLLBACK, connection changes, nontransactional operations
 or external I/O. Review new revisions and exercise failure rollback before
 deployment. Checksums detect changed history; there is no stamp, repair-history
-or downgrade command. Expand/contract and production rollout follow in DB-04.
+or downgrade command. Follow the [operator runbook](../../deployment/README.md)
+for target migration and rollout.

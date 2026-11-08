@@ -1,0 +1,17 @@
+{
+  "account_id": "REPLACE_ACCOUNT_ID",
+  "region": "ap-southeast-1",
+  "cluster": "enterprise-ai-dev",
+  "namespace": "enterprise-ai",
+  "registry": "REPLACE_ACCOUNT_ID.dkr.ecr.ap-southeast-1.amazonaws.com",
+  "image_tag": "REPLACE_GIT_SHA",
+  "kubectl_version": "REPLACE_v1.xx.x",
+  "certificate_arn": "REPLACE_ACM_CERTIFICATE_ARN",
+  "public_origin": "https://ai.example.com",
+  "platform_role_arn": "REPLACE_PLATFORM_IRSA_ARN",
+  "reference_role_arn": "REPLACE_REFERENCE_IRSA_ARN",
+  "worker_role_arn": "REPLACE_WORKER_IRSA_ARN",
+  "parser_image": "REPLACE_ECR_PARSER_URI@sha256:REPLACE_DIGEST",
+  "replicas": 1,
+  "worker_replicas": 0
+}

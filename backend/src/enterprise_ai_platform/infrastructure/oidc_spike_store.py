@@ -1,6 +1,7 @@
 """Disposable DynamoDB spike store; no platform tenants or sessions."""
 
 import re
+from contextlib import closing
 
 import boto3
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
@@ -25,10 +26,10 @@ class DynamoSpikeStore:
         if self.client is not None:
             result = getattr(self.client, operation)(**values)
         else:
-            with boto3.client("dynamodb", region_name="ap-southeast-1", config=Config(
+            with closing(boto3.client("dynamodb", region_name="ap-southeast-1", config=Config(
                 connect_timeout=min(1, left / 2), read_timeout=min(1, left / 2),
                 retries={"total_max_attempts": 1},
-            )) as client:
+            ))) as client:
                 result = getattr(client, operation)(**values)
         if self.deadline:
             self.deadline.remaining(reserve=1)

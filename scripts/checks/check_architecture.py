@@ -9,7 +9,7 @@ PACKAGES = (
     ("backend/src", "enterprise_ai_platform"),
     ("reference_service/src", "reimbursement_service"),
 )
-ROOT_FILES = {"main", "worker", "composition", "database_check", "migration_cli", "security_cli", "oidc_check", "oidc_spike_lambda", "__main__"}
+ROOT_FILES = {"main", "internal_api", "worker", "composition", "database_check", "migration_cli", "migration_pattern_check", "security_cli", "oidc_check", "oidc_spike_lambda", "identity_check", "authorization_check", "delegation_check", "job_check", "file_check", "file_worker", "workflow_worker", "knowledge_worker", "knowledge_check", "knowledge_lifecycle_check", "conversation_check", "checkpoint_check", "rag_check", "rag_runtime_check", "file_cloud_check", "model_check", "nova_model_check", "lambda_api", "__main__"}
 PUBLIC = {"service", "ports"}
 UNSAFE_NAMES = {"__import__", "__builtins__", "eval", "exec"}
 DATABASE_STDLIB = {"sqlite3", "_sqlite3", "dbm", "shelve"}
@@ -43,6 +43,13 @@ def violation(source: tuple[str, ...], target: str, package: str) -> str | None:
     if head in {name for _, name in PACKAGES} and head != package:
         return "application packages communicate through API contracts, not source imports"
     layer = source[1] if len(source) > 1 else "__init__"
+    if layer == "evaluation":
+        # Offline calculation/schema only. SQLite is isolated to its owned ledger.
+        if head in DATABASE_STDLIB:
+            return None if len(source)>2 and source[2]=='journal' else 'evaluation database access belongs only in the owned journal'
+        if head == package:
+            return None if len(parts)>1 and parts[1]=='evaluation' else 'offline evaluation cannot import application runtime or provider adapters'
+        return None if head in sys.stdlib_module_names or head=='pydantic' else 'offline evaluation uses stdlib, pydantic and its own records only'
     if head in DATABASE_STDLIB and layer in {"api", "modules", "config"}:
         return "database drivers belong in adapters, including standard-library drivers"
     if len(source) == 2 and layer == "config":

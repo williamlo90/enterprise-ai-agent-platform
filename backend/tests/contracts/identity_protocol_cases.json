@@ -1,16 +1,17 @@
 {
-  "contract_version": 1,
-  "status": "design_only_not_executed",
+  "contract_version": 3,
+  "status": "executable_contract_cases_runner_available",
   "requirement": "SEC-06",
   "clock": 1800000000,
   "baselines": {
     "id_claims": {
-      "iss": "https://identity.example.test/",
+      "iss": "https://cognito-idp.ap-southeast-1.amazonaws.com/ap-southeast-1_Test",
       "sub": "synthetic-user-a",
       "aud": "synthetic-client",
       "iat": 1799999990,
       "exp": 1800000300,
-      "nonce": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "nonce": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "token_use": "id"
     },
     "callback": {
       "state_matches": true,
@@ -47,7 +48,7 @@
       "active_buckets": 0
     }
   },
-  "interpretation": "Each case starts from the relevant valid baseline. changes is a declarative fault or event for the AUTH-02 runner to implement, not a mock verifier response. null for a claim means remove it. Claims are unsigned and never authentication evidence. Expected results are design assertions only.",
+  "interpretation": "Each case starts from the relevant valid baseline. changes is a declarative fault or event implemented by the AUTH-02 runner, not a mock verifier result. null for a claim means remove it. The runner uses fictional Cognito settings, actual signed tokens, HTTP handlers and a disposable real restricted PostgreSQL schema. This unsigned JSON is not authentication evidence; execution results and real-provider acceptance are recorded separately.",
   "cases": [
     {
       "id": "SEC-06-001",
@@ -67,7 +68,7 @@
       "id": "SEC-06-003",
       "layer": "oidc",
       "changes": {
-        "iss": "https://identity.example.test"
+        "iss": "https://cognito-idp.ap-southeast-1.amazonaws.com/ap-southeast-1_Test/"
       },
       "expected": "deny_no_session"
     },
@@ -531,7 +532,7 @@
       "changes": {
         "response_bytes": 262145
       },
-      "expected": "deny_keep_previous_valid_cache"
+      "expected": "deny_oversized_refresh_keep_valid_known_key_cache"
     },
     {
       "id": "SEC-06-060",
@@ -748,6 +749,23 @@
         "origin": "null"
       },
       "expected": "403_no_hash_change"
+    },
+    {
+      "id": "SEC-06-085",
+      "layer": "oidc",
+      "changes": {
+        "token_use": null
+      },
+      "expected": "deny_no_session"
+    },
+    {
+      "id": "SEC-06-086",
+      "layer": "oidc",
+      "changes": {
+        "token_use": "access"
+      },
+      "expected": "deny_no_session"
     }
-  ]
+  ],
+  "runner": "enterprise_ai_platform.identity_check --live (controlled signed provider, real restricted PostgreSQL)"
 }

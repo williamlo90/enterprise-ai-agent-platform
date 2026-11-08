@@ -1,153 +1,23 @@
 # Repository layout
 
-Status: struktur repository telah direview QA. BE-01/02 menyediakan package API/config dan HTTP boundary; BE-03 menambahkan composition root, modul system health, runtime readiness adapter dan guard import. DB-01 menambahkan infrastructure/database/connection.py, infrastructure/database_probe.py dan CLI database_check.py; uji offline/live dan QA independen lulus. Folder fitur lain tetap menyiapkan implementasi. DB-02 runner/SQL foundation migration sudah terpasang pada revision 0002 dan lulus QA. DB-03 menambahkan identity/domain.py untuk context, roles.py, security_probe.py, security_cli.py dan migration 0003; pemasangan dan QA selesai. Fitur bisnis dan deployment belum executable.
-
-Empat dokumen kontrak tetap di root. Struktur mengikuti [ARCHITECTURE.md](../ARCHITECTURE.md) dan tidak mengubah scope produk.
-
 ```text
-enterprise-ai-agent-platform/
-├── README.md
-├── PRODUCT_CONTRACT.md
-├── ARCHITECTURE.md
-├── DATA_AND_API_CONTRACTS.md
-├── TEST_PLAN.md
-├── frontend/
-│   ├── src/
-│   │   ├── app/
-│   │   ├── features/
-│   │   │   ├── auth/
-│   │   │   ├── tenants/
-│   │   │   ├── knowledge/
-│   │   │   ├── chat/
-│   │   │   ├── reimbursements/
-│   │   │   ├── approvals/
-│   │   │   └── admin/
-│   │   ├── components/
-│   │   ├── api/
-│   │   └── locales/
-│   ├── public/
-│   └── tests/
-│       ├── unit/
-│       └── integration/
-├── backend/
-│   ├── src/enterprise_ai_platform/
-│   │   ├── api/
-│   │   │   ├── public/
-│   │   │   └── internal/
-│   │   ├── modules/
-│   │   │   ├── system/
-│   │   │   ├── identity/
-│   │   │   ├── tenancy/
-│   │   │   ├── knowledge/
-│   │   │   ├── conversations/
-│   │   │   ├── agent/
-│   │   │   ├── policies/
-│   │   │   ├── drafts/
-│   │   │   ├── actions/
-│   │   │   ├── files/
-│   │   │   └── audit/
-│   │   ├── integrations/
-│   │   │   ├── identity/
-│   │   │   ├── models/
-│   │   │   └── reimbursement/
-│   │   └── infrastructure/
-│   │       ├── runtime.py
-│   │       ├── database/
-│   │       │   ├── connection.py
-│   │       │   ├── migration.py
-│   │       │   ├── migration_probe.py
-│   │       │   ├── roles.py
-│   │       │   ├── security_probe.py
-│   │       │   └── migrations/
-│   │       │       ├── 0001_foundation.sql
-│   │       │       ├── 0002_foundation_indexes.sql
-│   │       │       └── 0003_runtime_isolation.sql
-│   │       ├── database_probe.py
-│   │       ├── checkpoints/
-│   │       ├── jobs/
-│   │       ├── storage/
-│   │       ├── observability/
-│   │       └── security_journal/
-│   ├── migrations/
-│   └── tests/
-│       ├── unit/
-│       ├── integration/
-│       └── contracts/
-├── reference_service/
-│   ├── src/reimbursement_service/
-│   │   ├── api/
-│   │   ├── modules/
-│   │   │   ├── access/
-│   │   │   ├── trips/
-│   │   │   ├── policies/
-│   │   │   ├── claims/
-│   │   │   ├── operations/
-│   │   │   └── audit/
-│   │   ├── integrations/platform/
-│   │   └── infrastructure/database/
-│   ├── migrations/
-│   ├── fixtures/
-│   └── tests/
-│       ├── unit/
-│       ├── integration/
-│       └── contracts/
-├── contracts/
-│   ├── openapi/
-│   └── schemas/
-├── tests/
-│   ├── e2e/
-│   ├── security/
-│   └── resilience/
-├── evaluations/
-│   ├── datasets/
-│   │   ├── development/
-│   │   └── acceptance/
-│   ├── rubrics/
-│   ├── runners/
-│   └── manifests/
-├── scripts/
-│   ├── development/
-│   ├── checks/
-│   └── operations/
-├── deploy/
-│   ├── containers/
-│   ├── compose/
-│   ├── kubernetes/
-│   └── infrastructure/
-├── docs/
-│   ├── REPOSITORY_LAYOUT.md
-│   ├── backend/
-│   │   ├── architecture.md
-│   │   ├── database_schema.md
-│   │   └── task_plan.md
-│   ├── decisions/
-│   └── runbooks/
-└── .github/workflows/
+frontend/           React/TypeScript workspace, runtime tooling, and browser checks
+backend/            Platform API, workers, modules, adapters, migrations, and tests
+reference_service/  Independent reimbursement business service and its own lockfile
+scripts/            Frontend tooling, explicit checks, evaluation runners, and operator utilities
+evaluation/         Evaluation configuration and fixture inputs
+evaluations/        Evaluation workspace conventions
+infra/              AWS definitions, IAM examples, and independent journal handler
+deployment/         Container definitions, routing, release tooling, and recovery runbook
+docs/               Curated product, architecture, setup, and portfolio documentation
+.github/workflows/  Manually invoked repository and deployment workflows
 ```
 
-## Batas modul dan dependency
+The root [product contract](../PRODUCT_CONTRACT.md), [architecture](../ARCHITECTURE.md),
+[data/API contracts](../DATA_AND_API_CONTRACTS.md), and [verification guide](../TEST_PLAN.md)
+describe the current system. Each application owns its dependency manifest and lockfile.
 
-- API dan worker platform memakai package `enterprise_ai_platform` yang sama. Entry point API/worker, config, composition root, manifest dan lockfile dibuat pada tahap bootstrap, bukan diisi placeholder seolah executable.
-- Route menangani transport/validasi dan memanggil service modul. Domain/service/ports diletakkan dalam modul sesuai kebutuhan; adapter SQL/provider memasok implementasi port. Domain tidak mengimpor FastAPI, SDK provider atau koneksi DB. Modul lain mengakses public service/port, bukan tabel atau repository internal modul.
-- `modules/actions` memiliki consent/human action receipt, action identity, snapshot, state dan orkestrasi dispatch; `infrastructure/jobs` menyediakan claim/lease/outbox runner. State bisnis claim serta keputusan final milik service referensi. `modules/drafts` mengelola isi draf dan versinya; `modules/policies` mengelola paket aturan/eligibility. Detail transaksi consent+draft freeze+action/outbox dikoordinasikan oleh service aplikasi dan unit of work platform, tidak oleh route/model.
-- `modules/system` adalah fondasi health yang sudah digunakan sekarang: domain ProbeResult, BootstrapReadiness/HealthServicePort, dan HealthService. `composition.py` memasang adapter `infrastructure/runtime.py` per aplikasi. Ini tidak mengklaim service tenant/auth/database sudah diimplementasikan.
-- `modules/files` mengelola metadata/pin/akses/lifecycle file; adapter bytes privat di `infrastructure/storage`. Knowledge mengurus parsing/index dan memanggil file service. Agent menggunakan layanan bisnis yang sama dengan formulir manual, bukan SQL atau SDK bebas.
-- Identity membership/tenant policy aplikasi berbeda dari adapter OIDC di `integrations/identity`. Signed delegation, actor/eligibility/receipt API platform berada pada route internal dengan layanan domain terkait.
-- Reference service merupakan package dan unit build/deployment terpisah. Tidak mengimpor source backend, berbagi runtime model ORM, migration atau credential DB. `integrations/platform` memanggil HTTP API actor, eligibility dan receipt; `modules/access` mengendalikan izin service dan unduh receipt melalui relasi claim. `modules/operations` memiliki idempotency ledger/seal; `modules/claims` memiliki stage, revisions, keputusan dan expense reservations.
-- Schema publik antarlayanan berada di `contracts/` ketika OpenAPI/schema sudah dibakukan. Kode generated client mengikuti schema, tidak menjadi package domain bersama. Dokumen Markdown saat ini adalah sumber kontrak desain; versi executable ditambahkan dengan validasi drift, bukan duplikasi manual tanpa review.
-- Migration platform dan service terpisah. `infrastructure/security_journal` adalah adapter ke journal durabel independen, bukan penyimpanan jurnal pada DB snapshot yang sama. Deployment storage independennya berada pada infrastructure config saat milestone terkait.
-
-## Pengujian, evaluasi, dan artefak
-
-- Tes yang hanya memeriksa satu package berada pada tests package tersebut. Root `tests/` khusus lintas web/platform/service: E2E, security boundary dan resilience; tidak menggandakan semua unit test.
-- Fixture operasional service bersifat fiktif dan terpisah dari benchmark. Dataset development dan acceptance memiliki manifest, gold, versi dan kontrol perubahan; tidak dipakai sebagai data seed demo.
-- Pemisahan folder acceptance tidak membuat isinya rahasia dari implementer. Holdout independen dikelola QA melalui proses terpisah/akses terbatas bila diperlukan, dan kasus yang sudah dipakai tuning dinyatakan regression sesuai TEST_PLAN.
-- `evaluations/manifests` menyimpan konfigurasi dan ringkasan hasil yang telah disanitasi; raw trace, receipt, dokumen klien, dump DB, backup, dan hasil eksperimen lokal berada di `local/` atau `artifacts/` yang diabaikan Git.
-- `deploy/compose` untuk dependency development/integration minimum; Kubernetes/IaC memiliki milestone pembuktian sendiri. Tidak ada manifest deployment palsu, CI kosong yang terlihat lulus, dependency terpasang atau klaim aplikasi dapat dijalankan pada tahap struktur.
-- Folder kosong ditandai `.gitkeep` agar tersimpan di Git. File ini dihapus saat folder memiliki implementasi nyata. Tidak membuat file source/config/migration kosong yang menyiratkan fitur selesai.
-
-## Kelanjutan bootstrap
-
-Platform API mendapatkan manifest/lockfile, konfigurasi tervalidasi, entry point pada BE-01, HTTP boundary pada BE-02, dan composition/wiring health pada BE-03. Unit worker/reference service mengikuti task masing-masing. Secret menggunakan environment atau secret manager; `.env.example` berisi bootstrap/boundary settings tanpa credential. Struktur ini tidak otomatis mengizinkan pembuatan resource cloud atau pemakaian data sensitif.
-
-SQL migration executable berada di package agar ikut wheel; backend/migrations/README.md menjelaskan alur authoring. CLI migration_cli.py terpisah dari API startup.
+API routes consume application services. Domain/port modules are independent of transport and
+provider SDKs. Infrastructure implements those ports. The independent reimbursement service
+does not import platform source. Private credentials, local runtime files, experiments, and
+raw engineering records stay outside the published repository.

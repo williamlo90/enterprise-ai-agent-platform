@@ -51,3 +51,26 @@ test-results/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Deployment operator configuration and generated private artifacts
+deployment/local/
+deployment/target.json
+deployment/generated/
+
+# Local project coordination and raw engineering records
+/AGENTS.md
+/docs/**/*.md
+/reference_service/VALIDATION*.md
+/docs/backend/policy_source_draft/
+/docs/backend/policy_schema_draft.sql
+/docs/backend/policy_capabilities_draft.sql
+
+# Curated public documentation (images and source files remain publishable)
+!/docs/README.md
+!/docs/GETTING_STARTED.md
+!/docs/backend/architecture.md
+!/docs/backend/database_schema.md
+!/docs/REPOSITORY_LAYOUT.md
+!/docs/portfolio/CASE_STUDY.md
+!/docs/portfolio/APPLICATION_PACK.md
+!/docs/product-tour/README.md

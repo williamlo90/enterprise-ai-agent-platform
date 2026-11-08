@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Disposable Cognito feasibility probe. No enterprise platform sessions.
+Description: Isolated development host for Cognito probe or AUTH-02 API verification.
 Parameters:
   ArtifactBucket:
     Type: String
@@ -18,6 +18,23 @@ Parameters:
     Type: String
   JwksUri:
     Type: String
+  ConcurrencyMode:
+    Type: String
+    Default: reserved
+    AllowedValues: [reserved, account]
+  ApplicationMode:
+    Type: String
+    Default: probe
+    AllowedValues: [probe, identity]
+  PublicOrigin:
+    Type: String
+    Default: 'https://unconfigured.invalid'
+  RedirectUri:
+    Type: String
+    Default: 'https://unconfigured.invalid/api/v1/auth/callback'
+Conditions:
+  ReserveTwo: !Equals [!Ref ConcurrencyMode, reserved]
+  IdentityMode: !Equals [!Ref ApplicationMode, identity]
 Resources:
   ProbeSecrets:
     Type: AWS::SecretsManager::Secret
@@ -59,14 +76,17 @@ Resources:
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
-              - Effect: Allow
-                Action:
-                  - dynamodb:GetItem
-                  - dynamodb:PutItem
-                  - dynamodb:DeleteItem
-                  - dynamodb:UpdateItem
-                  - dynamodb:ConditionCheckItem
-                Resource: !GetAtt Transactions.Arn
+              - !If
+                - IdentityMode
+                - !Ref 'AWS::NoValue'
+                - Effect: Allow
+                  Action:
+                    - dynamodb:GetItem
+                    - dynamodb:PutItem
+                    - dynamodb:DeleteItem
+                    - dynamodb:UpdateItem
+                    - dynamodb:ConditionCheckItem
+                  Resource: !GetAtt Transactions.Arn
               - Effect: Allow
                 Action:
                   - logs:CreateLogStream
@@ -82,11 +102,11 @@ Resources:
       FunctionName: !Ref ProbeName
       Runtime: python3.13
       Architectures: [x86_64]
-      Handler: enterprise_ai_platform.oidc_spike_lambda.handler
+      Handler: !If [IdentityMode, enterprise_ai_platform.lambda_api.handler, enterprise_ai_platform.oidc_spike_lambda.handler]
       Role: !GetAtt ExecutionRole.Arn
       MemorySize: 256
-      Timeout: 25
-      ReservedConcurrentExecutions: 2
+      Timeout: !If [IdentityMode, 60, 25]
+      ReservedConcurrentExecutions: !If [ReserveTwo, 2, !Ref 'AWS::NoValue']
       Code:
         S3Bucket: !Ref ArtifactBucket
         S3Key: !Ref ArtifactKey
@@ -95,6 +115,9 @@ Resources:
       Environment:
         Variables:
           SPIKE_ENABLED: 'false'
+          APP_AUTH_ENABLED: 'false'
+          APP_AUTH_CALLBACK_LOGGING_CONTROLLED: !If [IdentityMode, 'true', 'false']
+          APP_AUTH_DEMO_UI: !If [IdentityMode, 'true', 'false']
           SPIKE_TABLE_NAME: !Ref Transactions
           SPIKE_SECRET_ARN: !Ref ProbeSecrets
           OIDC_ISSUER: !Ref Issuer
@@ -102,8 +125,8 @@ Resources:
           OIDC_AUTHORIZATION_ENDPOINT: !Ref AuthorizationEndpoint
           OIDC_TOKEN_ENDPOINT: !Ref TokenEndpoint
           OIDC_JWKS_URI: !Ref JwksUri
-          OIDC_REDIRECT_URI: 'https://unconfigured.invalid/api/v1/auth/callback'
-          PUBLIC_ORIGIN: 'https://unconfigured.invalid'
+          OIDC_REDIRECT_URI: !Ref RedirectUri
+          PUBLIC_ORIGIN: !Ref PublicOrigin
   Url:
     Type: AWS::Lambda::Url
     Properties:

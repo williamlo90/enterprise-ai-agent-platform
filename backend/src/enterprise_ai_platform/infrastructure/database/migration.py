@@ -9,6 +9,7 @@ import psycopg
 from psycopg import sql
 
 from enterprise_ai_platform.infrastructure.database.connection import ConnectionTarget, DatabaseUnavailable, direct_connection, bounded_transaction
+from enterprise_ai_platform.infrastructure.database.migration_sql import validate_atomic_sql
 
 DEFAULT_SCHEMA = "platform"
 
@@ -61,6 +62,11 @@ def validate_revisions(items: tuple[Revision, ...]):
         raise MigrationError()
     if len({item.name for item in items}) != len(items) or any(not item.source.strip() for item in items):
         raise MigrationError()
+    try:
+        for item in items:
+            validate_atomic_sql(item.source)
+    except ValueError:
+        raise MigrationError() from None
 
 
 def validate_history(history, items: tuple[Revision, ...]):
@@ -108,6 +114,7 @@ async def migrate(target: ConnectionTarget, *, upgrade: bool = False,
         async with direct_connection(target, timeout=60) as connection:
             async with bounded_transaction(connection):
                 await connection.execute("SET LOCAL search_path = pg_catalog")
+                await connection.execute("SET LOCAL standard_conforming_strings = on")
                 await connection.execute("SET LOCAL statement_timeout = '20s'")
                 await connection.execute("SET LOCAL lock_timeout = '5s'")
                 await connection.execute("SET LOCAL idle_in_transaction_session_timeout = '20s'")

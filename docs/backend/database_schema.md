@@ -1,158 +1,38 @@
-# Database schema
+# Database ownership and isolation
 
-Status: spesifikasi schema PostgreSQL. DB-01 koneksi telah lulus QA; DB-02 foundation migration 0001/0002 sudah terpasang dan lulus QA kode, wheel dan database nyata. DB-03 role/context/RLS dan registry role sudah terpasang pada revision 0003 serta lulus QA. Tabel fitur setelah identity/config masih rancangan. Acuan [DATA_AND_API_CONTRACTS.md](../../DATA_AND_API_CONTRACTS.md), [backend architecture](architecture.md), dan [task plan](task_plan.md). Schema ini memperinci model logis, bukan mengganti pemilik data atau scope produk.
+## Platform database
 
-## 1. Konvensi dan jenis relasi
+The platform stores identity and membership, scoped tenant configuration, document metadata and
+versions, source indexes, conversations and provenance, policies, drafts, human action receipts,
+jobs, checkpoints, and privacy lifecycle state. PostgreSQL/pgvector supports persisted knowledge
+retrieval alongside transactional application records.
 
-`PK` primary key, `FK` foreign key, `UQ` unique, `NN` wajib, `?` nullable. Tabel tenant secara default mempunyai `tenant_id UUID NN`, `id UUID NN`, `created_at TIMESTAMPTZ NN` dan PK `(tenant_id,id)`. FK ke tabel tenant selalu membawa tenant_id. Semua kolom yang tidak bertanda `?` NN; default yang disebut diterapkan DB. Timestamp disimpan UTC; DATE bisnis dievaluasi menurut tenant timezone IANA. Nilai timezone/currency divalidasi allowlist terversi aplikasi/fixture, tidak menerima teks bebas tanpa pemeriksaan.
+## Reference-service database
 
-Tabel mutable memiliki `version BIGINT NN DEFAULT 1 CHECK >0`, `updated_at TIMESTAMPTZ NN`; increment melalui compare-and-swap/row lock. Baris snapshot/revision/event immutable tidak menggunakan version mutable palsu. JSONB wajib schema-validated sebelum masuk repository; check object/array dan schema_version mengikat format. Field penting untuk relasi, uang, versi, state, serta idempotency tetap kolom/relasi terstruktur.
+The reimbursement service owns its tenant registry, trips, immutable rule packages, claim
+revisions, approval stages, operation ledger, and terminal proofs. Its tenant registry establishes
+scope and does not independently grant membership. Platform and service credentials are distinct.
 
-`principals`, `tenants`, dan `sessions` adalah pengecualian PK global. Snapshot versi tertentu menggunakan PK khusus yang disebut. Seluruh aturan delete memakai RESTRICT atau tombstone/anonymisation terkoordinasi, bukan cascade massal terhadap bukti transaksi. ID opaque dan FK bukan bukti hak baca.
+## Isolation
 
-Relasi dasar: tenant 1:N membership/documents/conversations/policy versions; principal N:M tenant melalui membership; document 1:N version 1:N chunk; conversation 1:N message/run; draft 1:N immutable version; action 1:1 human receipt dan N:1 draft version opsional; claim 1:N revision/stage/decision; item biaya 1:0..1 reservation aktif. Tidak ada FK lintas database platform/service.
+Runtime connections use restricted roles and transaction-local actor/tenant context. Row-level
+security reinforces tenant boundaries. Runtime roles do not own migration objects or receive
+operator privileges. Connection cleanup, transaction rollback, and current-authority checks are
+part of the application boundary.
 
-## 2. Platform — identity dan konfigurasi
+## Migrations
 
-| Tabel | Kolom selain konvensi | PK/FK/constraint dan indeks |
-| --- | --- | --- |
-| principals | `id UUID`, `issuer TEXT`, `subject TEXT`, `display_name TEXT?`, `active BOOLEAN DEFAULT true`, `created_at TIMESTAMPTZ` | PK id; UQ(issuer,subject). Tidak menyimpan password OIDC. Soft disable menjaga referensi audit. |
-| tenants | `id UUID`, `slug TEXT`, `name TEXT`, `timezone TEXT`, `active BOOLEAN DEFAULT true`, `config_version BIGINT DEFAULT 1`, `created_at TIMESTAMPTZ` | PK id; UQ slug; config_version>0; parent semua tenant FK. |
-| memberships | `principal_id UUID`, `active BOOLEAN DEFAULT true`, `access_revision BIGINT DEFAULT 1`, mutable columns | FK principal→principals.id, tenant→tenants.id; UQ(tenant_id,principal_id) dan UQ(tenant_id,id,principal_id); index principal_id/active. |
-| membership_roles | `membership_id UUID`, `role TEXT`, `scope_kind TEXT`, `scope_ref TEXT`, `granted_by UUID`, mutable columns | FK tenant+membership→memberships; grantor→principals; UQ tenant+membership+role+scope_kind+scope_ref. Role allowlist employee/knowledge_manager/tenant_admin/process_owner/approver/operator_scoped. Grantor != recipient untuk grant sensitif ditegakkan service dengan identity check. |
-| sessions | `id UUID`, `principal_id UUID`, `token_hash TEXT`, `csrf_hash TEXT`, `active_tenant_id UUID?`, `expires_at TIMESTAMPTZ`, `revoked_at TIMESTAMPTZ?`, `created_at TIMESTAMPTZ` | PK id, UQ token_hash; FK principal; FK(active_tenant_id,principal_id)→memberships(tenant_id,principal_id) bila tenant dipilih. Index principal/revoked/expiry. Token raw bukan kolom. |
-| tenant_configs | `config_version BIGINT`, `assistant_name TEXT`, `locales JSONB`, `help_contact TEXT`, `instruction_text TEXT`, `connector_ref TEXT`, `model_policy_ref TEXT`, `schema_version INTEGER` | Immutable config snapshot; UQ tenant+config_version. Header tenant.config_version memilih snapshot; FK pointer ditambahkan setelah kedua tabel ada. Connector/model policy ref registry server allowlist, bukan URL/secret dari user. |
-| security_policy_configs | `revision BIGINT`, `category TEXT`, `retention_seconds BIGINT?`, `region TEXT?`, `processing_policy JSONB`, `approved_by UUID?`, `approved_at TIMESTAMPTZ?` | UQ tenant+revision+category; draft boleh nullable, activation memerlukan seluruh nilai kategori wajib. Index tenant/revision. Tidak mengaktifkan data sensitif dengan retention kosong. |
+SQL is packaged with the owning application and bound to migration history by checksum. Changes
+are forward-only; applied migration source is immutable. API startup does not apply migrations.
+The packaged migration history describes available source, not the schema installed on a target.
 
-Actor global/system pada audit menggunakan kind serta reference terkontrol. Role operator provisioning tidak dicampur menjadi keanggotaan berhak baca semua tenant. Tenant admin dan process owner berbeda privilege; constraint DB bukan satu-satunya enforcement grant sensitivity.
+- [Platform migration source](../../backend/src/enterprise_ai_platform/infrastructure/database/migrations/)
+- [Reference-service source and migration package](../../reference_service/src/reimbursement_service/)
+- [Operator migration and release procedure](../../deployment/README.md)
 
-FK pointer `(tenants.id,tenants.config_version)`→`tenant_configs(tenant_id,config_version)` bersifat **DEFERRABLE INITIALLY DEFERRED**. Header tenant dan snapshot config awal dibuat dalam satu transaksi sehingga pemeriksaan pointer dilakukan pada commit; FK child tenant_configs→tenants tetap menjaga parent. DB-02 wajib menguji insert awal yang sah serta commit dengan snapshot hilang atau milik tenant lain yang ditolak. Menambahkan FK setelah tabel tersedia saja tidak menyelesaikan circular insert.
+## Integrity
 
-### Implementasi foundation DB-02
-
-Objek fondasi berada di schema `platform`; SQL executable dikemas pada `backend/src/enterprise_ai_platform/infrastructure/database/migrations/`. Revision 0001 membuat tujuh tabel di bagian 2 serta `timezone_catalog`; revision 0002 menambah indeks workload. Ledger `schema_migrations` terpisah dari data bisnis. CLI dan aturan revision pada [backend README](../../backend/README.md#migration-dan-foundation-schema-db-02).
-
-Timezone catalog versi 1 berisi Asia/Jakarta, Asia/Singapore, UTC dan direferensikan oleh tenants. `principals`, `tenants` dan `sessions` juga menyimpan version/updated_at untuk konsistensi konvensi mutable. Issuer dan subject dibatasi masing-masing 2048/512 byte agar unique index tetap sah. Hash tersimpan belum ditegakkan runtime: [rancangan AUTH-01](identity_protocol.md) memilih SHA-256 domain-separated untuk credential random 256 bit, absolute expiry 8 jam dan idle 30 menit. AUTH-02 memerlukan migration baru untuk login_transactions, authenticated_at/last_seen_at dan scoped identity capabilities; revision 0001–0003 tetap immutable. Finalisasi menunggu SPIKE-01/provider dan review. Role scope belum memberi izin hanya karena tersimpan; semantic allowlist dan anti-self-escalation mengikuti AUTH-03.
-
-Snapshot tenant/security policy immutable melalui trigger UPDATE/DELETE/TRUNCATE; perubahan membuat snapshot baru. Locale JSONB hanya id/en (satu atau keduanya, tanpa duplikat), config schema_version=1. Security processing_policy harus object dengan schema_version=1; category/region/semantik JSON, activation dan data policy lengkap mengikuti DATA-01. Approval metadata berpasangan dan memerlukan retention positif serta region, namun bukan bukti activation atau kepatuhan. Index principal/active membership, grantor, sessions principal/revoked/expiry dan active tenant tersedia. DB-03 menambah least privilege/context/RLS; FK tenant saja belum membuktikan isolasi akses.
-
-## 3. Platform — file dan knowledge
-
-| Tabel | Kolom selain konvensi | PK/FK/constraint dan indeks |
-| --- | --- | --- |
-| files | `owner_principal_id UUID`, `purpose TEXT`, `object_key TEXT`, `object_version TEXT`, `digest TEXT`, `size_bytes BIGINT`, `detected_type TEXT`, `scan_state TEXT`, `deletion_state TEXT`, mutable columns | FK tenant+owner→membership principal pair; UQ tenant+object_key+object_version; UQ tenant+id+digest. purpose knowledge/receipt; scan quarantine/ready/rejected; size>0, receipt≤10485760; states validated. Index owner/purpose/state. Byte version/digest immutable setelah upload selesai. |
-| file_pins | `file_id UUID`, `file_digest TEXT`, `operation_id UUID`, `candidate_claim_ref UUID`, `pin_state TEXT`, `claim_ref UUID?`, mutable columns | FK tenant+file_id+digest→files; UQ tenant+operation+file; pin held/finalised/released. Operation/claim service refs tidak FK ke DB lain. Index file/state. Orphan release hanya proof no-commit. |
-| documents | `title TEXT`, `active_version_id UUID?`, `access_revision BIGINT DEFAULT 1`, `withdrawn_at TIMESTAMPTZ?`, mutable columns | FK tenant+active_version→document_versions; child relation divalidasi FK tambahan dengan document_id. Index tenant/withdrawn; pointer nullable untuk draft. |
-| document_versions | `document_id UUID`, `version_no BIGINT`, `file_id UUID`, `file_digest TEXT`, `content_digest TEXT`, `parse_state TEXT`, `index_state TEXT`, `publication_state TEXT`, `index_generation BIGINT`, `embedding_model_ref TEXT`, `schema_version INTEGER` | FK doc dan file/digest sama tenant; UQ tenant+document_id+version_no; UQ tenant+id+document_id. Parse pending/processing/ready/failed; index pending/building/ready/failed; publication draft/published/superseded/withdrawn. Mutable pipeline state terpisah dari immutable source bytes. |
-| document_acl | `document_id UUID`, `grantee_kind TEXT`, `membership_id UUID?`, `role TEXT?`, `scope_ref TEXT?`, `permission TEXT`, `acl_revision BIGINT` | FK doc, membership tenant; CHECK tepat satu principal membership atau role grant sesuai kind. UQ dengan normalized subject key; role allowlist; permission read/manage/publish terpisah. Index doc dan subject; tidak ada wildcard lintas tenant. |
-| chunks | `document_version_id UUID`, `chunk_no INTEGER`, `location JSONB`, `text TEXT`, `embedding VECTOR(d)`, `embedding_model_ref TEXT`, `index_generation BIGINT` | FK source tenant; UQ tenant+version+generation+chunk_no; chunk_no≥0. Index source/generation; vector index dibuat sesuai hasil recall/latency. Dimensi d dikunci saat model embedding dipilih; migrasi tidak mencampur model/dimensi dalam indeks aktif. |
-
-Untuk pointer document.active_version, FK `(tenant_id,active_version_id,id)`→document_versions `(tenant_id,id,document_id)` memastikan versi milik dokumen yang sama. Circular FK ditambahkan setelah tabel tersedia; pointer awal NULL lalu set dalam transaksi publish. Tidak membuat published source sebelum parse/index/ACL ready. Penggantian pointer/publication state memakai lock document dan generation job aktif. Withdraw/ACL increment access revision sebelum index cleanup.
-
-Metadata pin/readiness dicek platform; service mengikat versi/digest pada claim receipt. File dapat terikat beberapa operation hanya bila akses owner sah. Maksimal 10 receipt dihitung pada draft/claim validation dan transaksi service; bukan menganggap CHECK satu row mampu menghitung tabel lain tanpa enforcement.
-
-## 4. Platform — paket aturan
-
-`policy_packages` mempunyai PK khusus `(tenant_id,id,package_version)`; `id` adalah package ID stabil yang digunakan API dan `package_version BIGINT >0`. Kolom: `digest TEXT`, `rules_json JSONB`, `schema_version INTEGER`, `valid_trip_end_from DATE`, `valid_trip_end_to DATE?`, `timezone TEXT`, `publication_state TEXT`, `service_ack_digest TEXT?`, `eligibility_revision BIGINT DEFAULT 1`, `allowed_for_new BOOLEAN DEFAULT false`, `allowed_for_locked_claims BOOLEAN DEFAULT false`, `blocked_reason TEXT?`, `publisher_id UUID?`, `published_at TIMESTAMPTZ?`, timestamps.
-
-CHECK end>start bila end ada; rentang `[from,to)`; state draft/prepared/active/withdrawn; digest dan rules/date/timezone immutable setelah prepared. UQ `(tenant_id,id,package_version,digest)` untuk FK snapshot. `policy_document_refs` mempunyai PK `(tenant_id,package_id,package_version,document_version_id)`, FK package dan source version tenant. API tidak menerima boolean eligibility sebagai authority dari caller.
-
-Activation mengunci row tenant, memeriksa range paket aktif tidak overlap, ack digest sama, seluruh source valid dan publisher sah, kemudian mengubah mapping/pointer dalam transaksi. Semua jalur activation memakai koordinasi lock ini; repository guard/trigger mencegah write bebas yang melewati validasi. Alternatif constraint exclusion dapat dipilih saat migration bila extension tersedia; buktikan race dua aktivasi tetap ditolak. Superseded mapping untuk new submission tetap menyimpan historical package bagi locked claim; withdrawn/known-conflict menutup eligibility keduanya.
-
-Paket immutable dan mutable eligibility berbeda concern. Update eligibility tidak mengubah rules digest; eligibility_revision bertambah dan live verifier dipanggil service sebelum submit/info/decision. Candidate package tidak dipilih hanya karena tanggalnya paling dekat. Tidak ada migration aturan retroaktif atau reroute active claim.
-
-## 5. Platform — percakapan, run, dan provenance
-
-| Tabel | Kolom selain konvensi | PK/FK/constraint dan indeks |
-| --- | --- | --- |
-| conversations | `owner_principal_id UUID`, `language TEXT`, `active_run_id UUID?`, `next_sequence BIGINT DEFAULT 1`, mutable columns | FK tenant+owner→memberships pair; language id/en; index owner/updated_at. Active run pointer FK tenant+run+conversation saat run ada, awal NULL. |
-| messages | `conversation_id UUID`, `author_kind TEXT`, `author_principal_id UUID?`, `body TEXT`, `sequence BIGINT`, `client_message_id UUID?`, `run_id UUID?`, `output_kind TEXT?` | FK conversation/run same tenant; UQ tenant+conversation+sequence; partial UQ tenant+conversation+client_message_id bila nonnull. Sequence allocated lock conversation. Author human/model/system. |
-| runs | `conversation_id UUID`, `actor_id UUID`, `state TEXT`, `writer_generation BIGINT DEFAULT 0`, `lease_until TIMESTAMPTZ?`, `model_ref TEXT`, `prompt_version TEXT`, `config_version BIGINT`, `current_action_id UUID?`, `usage JSONB`, mutable columns | FK conversation, tenant+actor membership, action opsional; UQ tenant+id+conversation; state queued/running/waiting/completed/failed/held; partial UQ active writer per conversation. |
-| checkpoints | `run_id UUID`, `namespace TEXT`, `checkpoint_no BIGINT`, `generation BIGINT`, `state_payload JSONB`, `schema_version INTEGER` | FK run; UQ tenant+run+namespace+checkpoint_no; fenced inserts dan read/list/history/intermediate paths. Adapter physical mapping dibuat eksplisit melalui spike, tidak diakses runtime tanpa tenant/actor. |
-| source_dependencies | `output_message_id UUID?`, `run_id UUID?`, `checkpoint_id UUID?`, `source_system TEXT`, `resource_type TEXT`, `resource_id UUID`, `resource_version TEXT`, `required_relation TEXT`, `access_revision TEXT?`, `location JSONB?` | CHECK tepat satu target output/run/checkpoint, FK target tenant. source platform document/file memakai validated typed FK association; source service trip/claim/receipt ref eksternal. Index target dan source_system/type/id untuk filtering/invalidation. |
-| feedback | `message_id UUID`, `actor_id UUID`, `rating TEXT`, `reason TEXT?` | FK message, tenant+actor membership; UQ tenant+message+actor; actor owner conversation diperiksa service. |
-
-Message yang memiliki run menggunakan FK komposit `(tenant_id,run_id,conversation_id)`→`runs(tenant_id,id,conversation_id)`, bukan hanya FK same-tenant ke run. FK conversation tetap berlaku dan run_id nullable untuk pesan yang belum terkait eksekusi. Default MATCH SIMPLE mengizinkan run NULL, tetapi run nonnull harus berasal dari conversation yang sama. CONV-01/CHK-01 menguji message conversation A yang menunjuk run conversation B dalam tenant sama dan mengharapkan penolakan.
-
-Provenance tidak hanya ACL dokumen. Perubahan stage service dapat menghilangkan hak atas ringkasan claim. Typed source access diverifikasi sebelum history/cache/context/output dipakai; target conversation owner bukan grant source. Payload checkpoint minimal/tervalidasi, tidak menyimpan secret/raw receipt. Adapter dapat memakai tabel tambahan intermediate writes; tabel itu wajib memiliki tenant/run binding, fencing, RLS dan lifecycle yang sama sebelum diterima.
-
-## 6. Platform — draf, bukti manusia, actions, outbox
-
-| Tabel | Kolom selain konvensi | PK/FK/constraint dan indeks |
-| --- | --- | --- |
-| drafts | `owner_id UUID`, `conversation_id UUID?`, `claim_ref UUID?`, `kind TEXT`, `current_version BIGINT`, `state TEXT`, mutable columns | FK tenant+owner/member, conversation; kind submission/information_update. State editable/frozen/committed/not_committed. Current version FK draft_versions ditambahkan setelah tabel ada. |
-| draft_versions | `draft_id UUID`, `draft_version BIGINT`, `payload JSONB`, `payload_hash TEXT`, `policy_id UUID`, `policy_version BIGINT`, `policy_digest TEXT`, `route_snapshot JSONB`, `schema_version INTEGER`, `created_at TIMESTAMPTZ` | PK tenant+draft_id+draft_version; FK draft+package/digest; immutable. Stable fields JSON disalin ke structured service rows saat commit. |
-| draft_receipts | `draft_id UUID`, `draft_version BIGINT`, `file_id UUID`, `file_digest TEXT` | PK tenant+draft+version+file; FK exact draft_version/file digest. Digest/version terikat hash; tidak menunjuk latest bytes. |
-| consents | `draft_id UUID`, `draft_version BIGINT`, `actor_id UUID`, `session_id UUID`, `payload_hash TEXT`, `policy_digest TEXT`, `destination TEXT`, `human_action_time TIMESTAMPTZ` | FK exact draft_version, actor, session; UQ tenant+draft+version untuk consent efektif. Immutable, actor == draft owner saat confirm. |
-| human_action_receipts | `actor_id UUID`, `session_id UUID`, `operation_id UUID`, `action_kind TEXT`, `canonical_payload_hash TEXT`, `bound_object_id UUID`, `bound_version BIGINT`, `human_action_time TIMESTAMPTZ`, `consent_id UUID?` | UQ tenant+operation; FK session/actor/optional consent; action_kind submit/update/decision. Decision tanpa draft. Operation FK ke action dapat DEFERRABLE atau receipt dibuat lalu action dengan FK satu arah, tetapi UQ 1:1 dipertahankan. |
-| actions | `draft_id UUID?`, `draft_version BIGINT?`, `human_action_receipt_id UUID`, `actor_id UUID`, `kind TEXT`, `idempotency_key TEXT`, `request_hash TEXT`, `snapshot JSONB`, `state TEXT`, `result_ref UUID?`, `result_version BIGINT?`, `last_error_code TEXT?`, mutable columns | FK receipt, actor dan draft pair jika ada; UQ tenant+kind+actor+key, UQ tenant+receipt, partial UQ tenant+draft+version untuk submit/update. CHECK dua draft kolom bersama nullable dan decision tidak butuh draft. State queued/sending/unknown/committed/not_committed. |
-| outbox_jobs | `job_type TEXT`, `business_key TEXT`, `action_id UUID?`, `run_id UUID?`, `source_version_id UUID?`, `state TEXT`, `generation BIGINT DEFAULT 0`, `lease_until TIMESTAMPTZ?`, `next_attempt_at TIMESTAMPTZ`, `attempts INTEGER DEFAULT 0`, `retry_limit INTEGER`, `payload JSONB`, mutable columns | UQ tenant+job_type+business_key; FK referensi tenant; typed target sesuai job_type, attempts≥0, retry_limit≥0. Index state/next_attempt_at/lease_until untuk scheduler. |
-| audit_events | `actor_kind TEXT`, `actor_ref UUID?`, `action TEXT`, `object_kind TEXT`, `object_ref TEXT`, `object_version TEXT?`, `outcome TEXT`, `operation_ref UUID?`, `correlation_id UUID`, `metadata JSONB`, `occurred_at TIMESTAMPTZ` | Append-only, redacted metadata; index tenant/object/time/correlation. System actor dapat NULL ref dengan kind system. Tidak cascade-delete saat actor disabled. |
-
-Tidak membuat FK lintas DB untuk action.result_ref/claim_ref. Human receipt mengikat canonical kind-specific payload; decision hash menyertakan claim/version/revision/stage/decision/reason. Consent+human receipt+draft freeze+action+outbox+audit ditulis satu transaksi platform. Retry identik mengembalikan action yang sama; input mismatch 409 sebelum outbox baru.
-
-FK pointer `(drafts.tenant_id,drafts.id,drafts.current_version)`→`draft_versions(tenant_id,draft_id,draft_version)` adalah **DEFERRABLE INITIALLY DEFERRED**. Pembuatan header dan snapshot version awal terjadi dalam satu transaksi, begitu pula pembaruan pointer saat versi baru dibuat. DRAFT-01 wajib membuktikan insert sah dan penolakan commit dengan versi hilang atau milik draft lain. Pointer wajib tidak dibiarkan dangling setelah commit.
-
-Fencing generasi job dan run memerlukan repository compare-and-swap pada setiap checkpoint/intermediate/pointer/job write, bukan hanya CHECK generation positif. Scheduler lintas tenant mempunyai credential terbatas untuk claim metadata; tidak menjadi pembaca seluruh payload/content. Job execution membuka context tenant/actor yang diverifikasi. Migration menyiapkan role/function minimum dan pengujiannya, bukan memberi worker owner.
-
-## 7. Service — policy, trip, dan claim
-
-Database service memakai konvensi tenant PK yang sama, tetapi tenant/principal refs berasal dari verifikasi platform, tanpa FK lintas DB. Bila diperlukan, `service_tenants` cache registry menyimpan id/digest provisioning; tidak menjadi authority membership. Semua tabel service tunduk RLS tenant dan enforcement resource service.
-
-| Tabel | Kolom selain konvensi | PK/FK/constraint dan indeks |
-| --- | --- | --- |
-| service_policy_packages | `package_version BIGINT`, `digest TEXT`, `rules_json JSONB`, `schema_version INTEGER`, `valid_trip_end_from DATE`, `valid_trip_end_to DATE?`, `timezone TEXT`, `copied_at TIMESTAMPTZ` | PK tenant+id+package_version (exception); UQ tenant+id+version+digest. Immutable. Operational eligibility dari live platform, bukan boolean cache authoritative. |
-| trips | `owner_principal_ref UUID`, `start_date DATE`, `end_date DATE`, `employee_ref TEXT`, `state TEXT`, mutable columns | end≥start; index tenant+owner/end; fixtures state allowlist. Owner current mapping verified. |
-| trip_expense_items | `trip_id UUID`, `owner_principal_ref UUID`, `expense_date DATE`, `category TEXT`, `declared_amount_minor BIGINT`, `currency TEXT`, mutable columns | FK trip same tenant; amount>0; index trip/owner; item identity stable untuk dedup, bukan receipt-content comparison. |
-| claims | `public_reference TEXT`, `owner_principal_ref UUID`, `trip_id UUID`, `policy_id UUID`, `policy_version BIGINT`, `policy_digest TEXT`, `state TEXT`, `current_revision_no BIGINT`, `active_stage_no INTEGER?`, `submitted_at TIMESTAMPTZ`, `previous_claim_id UUID?`, mutable columns | FK trip/package digest, previous_claim same tenant; UQ tenant+reference; state pending_approval/needs_information/approved/rejected. Index owner/status/time. Current revision pointer added via FK setelah child table. |
-| claim_revisions | `claim_id UUID`, `revision_no BIGINT`, `payload_hash TEXT`, `total_minor BIGINT`, `currency TEXT`, `consent_ref UUID`, `human_action_ref UUID`, `submitted_by_ref UUID`, `created_at TIMESTAMPTZ` | PK tenant+claim_id+revision_no; FK claim; total>0; immutable. Consent/receipt refs eksternal, verified attestation stored by hash/version. |
-| claim_revision_items | `claim_id UUID`, `revision_no BIGINT`, `item_id UUID`, `amount_minor BIGINT`, `currency TEXT`, `description TEXT` | PK tenant+claim+revision+item; FK exact revision and trip item; amount>0; sum/one currency/trip consistency validated in same claim transaction. |
-| claim_receipts | `claim_id UUID`, `revision_no BIGINT`, `file_ref UUID`, `file_digest TEXT`, `pin_operation_ref UUID`, `attestation_digest TEXT` | PK tenant+claim+revision+file; FK revision only; file external. Immutable, max10 checked while locked. |
-| claim_stages | `claim_id UUID`, `revision_no BIGINT`, `stage_no INTEGER`, `approver_principal_ref UUID`, `scope_ref TEXT`, `stage_state TEXT`, `decided_at TIMESTAMPTZ?` | PK tenant+claim+revision+stage; FK revision; stage>0; pending/approved/rejected/information_requested/void. Route contiguous/order and owner!=approver enforced claim service. |
-| decisions | `claim_id UUID`, `revision_no BIGINT`, `stage_no INTEGER`, `actor_ref UUID`, `decision TEXT`, `reason TEXT?`, `operation_id UUID`, `human_action_ref UUID`, `payload_hash TEXT`, `created_at TIMESTAMPTZ` | FK exact stage; UQ tenant+operation, UQ tenant+claim+revision+stage for committed decision; reason nonempty bila reject/request_information; immutable. |
-| expense_reservations | `item_id UUID`, `claim_id UUID`, `reservation_state TEXT`, `created_at TIMESTAMPTZ` | PK tenant+item_id; FK item+claim; held/approved, release via transactional delete on rejected/removed item sesuai kebutuhan. Satu active claim per item, key berbeda tetap konflik. |
-
-Claim.current_revision_no FK `(tenant_id,id,current_revision_no)`→claim_revisions dan active_stage FK ke claim_stages exact revision. Circular claim→revision→claim memerlukan DEFERRABLE INITIALLY DEFERRED FK, sehingga insert header/revision/stages dalam satu transaksi dapat konsisten saat commit. Active_stage NULL saat needs_information/terminal. Claim service tetap memeriksa state ↔ stage invariants, route order dan identity grants sebelum update; constraint tidak menganggap principal_ref luar DB otomatis sah.
-
-Needs-information update membuat revision baru, copy route paket terkunci, menandai stage lama void bila belum terminal, reset approvals dan reservations atomik. Referensi histori decision lama tidak dihapus. Header version meningkat pada semua state/revision changes, bukan revision_no saja. Reject melepaskan reservation untuk resubmit baru yang merujuk claim lama dan tetap mematuhi deadline normal. Approved reservation dipertahankan selama claim aktif/retensi terkait; no payment state.
-
-## 8. Service — ledger operasi dan koordinasi
-
-`service_operations`: `(tenant_id,id)` PK, `actor_ref UUID`, `caller_id TEXT`, `kind TEXT`, `idempotency_key TEXT`, `request_hash TEXT`, `state TEXT`, `claim_ref UUID?`, `result_version BIGINT?`, `result_payload JSONB?`, `checked_access_revision TEXT?`, `checked_eligibility_revision BIGINT?`, `checked_at TIMESTAMPTZ?`, `created_at TIMESTAMPTZ`, `completed_at TIMESTAMPTZ?`. UQ tenant+kind+actor+key; immutable identity/hash; terminal state committed/rejected/sealed_no_commit; transient processing internal bila diterapkan wajib aman setelah rollback/crash. Claim FK tenant bila hasil ada. Index result claim dan tenant/key; no key recycle selama result/restore lifetime terkait masih ada.
-
-`service_audit`: konvensi tenant event ID; `actor_ref UUID?`, `actor_kind TEXT`, `operation_id UUID`, `claim_ref UUID?`, `event TEXT`, `object_version BIGINT?`, `outcome TEXT`, `metadata JSONB`, `occurred_at TIMESTAMPTZ`; FK operation dan claim bila ada; append-only scoped indexes.
-
-Dispatch dan seal-if-absent mengunci serialization identity operation ID yang sama, termasuk ketika row belum ada (insert-if-absent + unique lock/retry transaksi). Service tidak hanya SELECT FOR UPDATE pada row absent. Commit/seal berbeda worker/key/hash dibuktikan tes race. Payload changed same key 409; same snapshot replay old committed mengembalikan hasil setelah reotorisasi, bukan mencoba submit dengan deadline saat ini.
-
-Pin/actor/eligibility checks HTTP tidak menahan transaksi DB panjang. Final verification/version checks dilakukan sebelum commit boundary dan dicatat; tindakan yang sudah committed tidak dijanjikan bisa ditarik kembali oleh revocation sesudahnya. Pin tetap held saat ambiguity, finalise idempotent setelah committed atau sealed proof. Keputusan+claim update+ledger+audit atomik; 202 platform tidak berarti service claim sudah ada.
-
-## 9. RLS, indeks, dan strategi migration
-
-| Scope | Enforcement yang diwajibkan |
-| --- | --- |
-| Data tenant platform | RLS default deny tanpa current tenant/actor; SELECT dan WITH CHECK untuk mutasi. Membership/source/object policy diperiksa application service sebelum data ditampilkan. |
-| Sessions/principals global | Jalur identity repository scoped, token hash lookup atau principal sendiri; role aplikasi umum tidak SELECT semua identitas. |
-| Service DB | Tenant RLS + owner/active stage melalui service policies; incoming principal refs diverifikasi. Tidak berbagi DB login platform. |
-| Jobs scheduler | Claim-only metadata function/role least privilege; generation checks dan scoped execution, bukan unrestricted payload reader. |
-| Checkpoint tables | Seluruh table/intermediate adapter terdaftar RLS+fencing. Schema owner/migration privilege tidak dipakai runtime. |
-| Audit/journal | Append-only events, reader scope eksplisit. Security journal eksternal bukan tabel di snapshot platform; watermark refs lokal bukan authority kelengkapan. |
-
-Indeks PK/FK ditambah workload indexes owner/time, claim state/active stage, message sequence, source refs, job due/lease dan operations/key. Vector index tidak wajib HNSW sebelum evaluasi; retrieval memakai ACL/version filter dan hasil dievaluasi setelah filter. Tidak membuat cache/index yang membuang actor/source checks. Query plan dan size/cost diukur PERF-01.
-
-Urutan migration bertahap: (1) tenant/identity/session/config; (2) files/knowledge/ACL; (3) conversations/runs/checkpoints; (4) packages/drafts/action snapshots/jobs; service punya history terpisah: packages/trips → claims/revisions/stages/reservations → operations/audit. Urutan logis menyesuaikan FK nyata: audit/ledger dan parents yang dibutuhkan dibuat sebelum child feature memakai FK; circular pointers ditambah setelah semua tabel tersedia dan diisi atomik. Tidak menerapkan seluruh schema masa depan pada tugas koneksi DB pertama.
-
-Migration diuji empty→head, previous revision→head dengan data fiktif, constraint negatif/cross-tenant, rollback kegagalan migration, RLS runtime, resource packaging wheel, dan replay upgrade. Expand/contract untuk perubahan kolom dan retention; rollback aplikasi tidak diasumsikan undo destructive SQL. Sensitive data belum dipakai sebelum retensi/residency ditetapkan.
-
-### Implementasi DB-03
-
-Revision 0003 menambahkan `runtime_access_role_registry` dan `runtime_role_registry`, masing-masing singleton berisi role_name/name dan role_oid/OID unik dengan created_at. Runtime tidak dapat membaca/menulis registry. Registry mengikat identitas role, bukan sekadar nama yang bisa dibuat ulang. Access role NOLOGIN tidak memiliki objek atau membership lain; LOGIN hanya mewarisi role tersebut, tanpa SET/ADMIN.
-
-RLS enabled+forced pada principals, tenants, memberships, membership_roles, tenant_configs, security_policy_configs, sessions, schema_migrations dan kedua registry. Policy migration maintenance eksplisit terpisah dari policy runtime SELECT-only. Runtime membaca principal/membership/role sendiri dan tenant/config yang sesuai context aktif; sessions/security policy/ledger/registry tanpa grant runtime. Timezone catalog adalah metadata global read-only. Mutation foundation menunggu scoped AUTH paths. Checks USING/WITH CHECK untuk mutasi diuji pada tabel fitur disposable yang tidak dipasang ke schema aplikasi.
-
-`context_tenant_id`, `context_actor_id`, `has_active_context` dan wrapper `runtime_role_is_valid` adalah helper terbatas. Private `_runtime_role_is_valid(candidate oid)` hanya dapat dipanggil migrator untuk preflight sebelum perubahan credential; wrapper runtime memeriksa SESSION_USER aktual. Seluruh fungsi menggunakan fixed search_path dan qualified references. Role guard meliputi privilege efektif tabel/kolom/grant option/function/sequence, flag administratif, ownership, dan membership. Semantik identity/login, scope sensitif dan policy fitur tetap mengikuti AUTH serta task fitur. Panduan operasi dan trust boundary pada [backend README](../../backend/README.md#runtime-identity-context-dan-rls-db-03).
-
-## 10. Journal dan parameter yang belum dibekukan
-
-Security recovery journal eksternal menyimpan tenant, monotonic sequence/event ID, affected typed resource/principal, action deny/delete/access-change/package-withdrawal, intent/result, integrity metadata dan timestamp. Intent durabel pada failure domain independen sebelum revoke/delete/access change diakui; ambiguous intent replay deny. Snapshot DB menyimpan checkpoint watermark. Recovery memverifikasi latest watermark dari sumber independen, memeriksa gaps, dan menahan scope bila tidak lengkap; tidak mengambil journal tua dari backup yang sama lalu menganggap aman. Detail media M3 dan retention tidak diklaim sudah dipasang.
-
-Sebelum migration terkait: putuskan embedding dimension/model, canonical JSON/hash version, connection/runtime settings, implementation RLS dan checkpoint physical tables, serta identity key/token hash policy melalui spike. Sebelum data sensitif: isi retensi/residency per kategori. Sebelum acceptance: freeze workload/quality/performance/cost gates sesuai TEST_PLAN. Nilai ini bukan alasan mengabaikan constraint/invariant atau memperkenalkan dependency melingkar sebelum prototype.
+Draft versions, policy packages, and action identities preserve reviewable inputs. Owning-store
+transactions commit business effects together with their operation receipts. Privacy fences
+coordinate inventory and conversation disposition. Operational recovery additionally uses the
+independent journal and held-restore procedure supplied in the deployment package.

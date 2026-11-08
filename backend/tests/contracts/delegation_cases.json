@@ -1,0 +1,716 @@
+{
+  "contract_version": 1,
+  "canonical_golden_payload": {
+    "schema_version": 1,
+    "action": "claim.decide",
+    "tenant_id": "d0e28f6d-62b2-5077-add0-0fdfd378d02d",
+    "actor_id": "78f61c9a-84da-5ce1-93ed-f8e6b4b4e3aa",
+    "operation_id": "be70b822-a703-565e-9d4e-dd9704e46ae7",
+    "object": {
+      "kind": "claim",
+      "id": "a6ee7ab7-bdfc-5837-91db-79b7d07026cf",
+      "version": 7
+    },
+    "data": {
+      "revision": 2,
+      "stage": 1,
+      "decision": "reject",
+      "reason": "Receipt tidak lengkap. "
+    }
+  },
+  "canonical_golden_hash": "e45c27a76bc504eccacebca33f4504c890129302addd225807a139ac8c60a83b",
+  "cases": [
+    {
+      "id": "SEC-DELEGATION-001",
+      "name": "valid read",
+      "layer": "claims",
+      "changes": {},
+      "expected_status": 200,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-002",
+      "name": "wrong issuer",
+      "layer": "claims",
+      "changes": {
+        "iss": "untrusted"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-003",
+      "name": "wrong audience",
+      "layer": "claims",
+      "changes": {
+        "aud": "other-service"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-004",
+      "name": "audience array",
+      "layer": "claims",
+      "changes": {
+        "aud": [
+          "reference-reimbursement"
+        ]
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-005",
+      "name": "wrong dispatcher",
+      "layer": "claims",
+      "changes": {
+        "caller": "model-tool"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-006",
+      "name": "expired",
+      "layer": "claims",
+      "changes": {
+        "exp": "$expired"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-007",
+      "name": "future issued",
+      "layer": "claims",
+      "changes": {
+        "iat": "$future",
+        "nbf": "$future",
+        "exp": "$future_exp"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-008",
+      "name": "long lifetime",
+      "layer": "claims",
+      "changes": {
+        "exp": "$long"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-009",
+      "name": "wrong not-before",
+      "layer": "claims",
+      "changes": {
+        "nbf": "$past"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-010",
+      "name": "missing subject",
+      "layer": "claims",
+      "changes": {
+        "drop": "sub"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-011",
+      "name": "unknown authority",
+      "layer": "claims",
+      "changes": {
+        "role": "tenant_admin"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-012",
+      "name": "boolean revision",
+      "layer": "claims",
+      "changes": {
+        "access_revision": true
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-013",
+      "name": "unknown action",
+      "layer": "claims",
+      "changes": {
+        "action": "claim.pay"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-014",
+      "name": "object kind mismatch",
+      "layer": "claims",
+      "changes": {
+        "object_kind": "claim"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-015",
+      "name": "noncanonical uuid",
+      "layer": "claims",
+      "changes": {
+        "sub": "NOT-UUID"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-016",
+      "name": "wrong actor",
+      "layer": "payload",
+      "changes": {
+        "actor_id": "0de3480b-dbc1-5d13-9817-4a8614addb25"
+      },
+      "expected_status": 403,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-017",
+      "name": "wrong tenant",
+      "layer": "payload",
+      "changes": {
+        "tenant_id": "df66b925-985f-5537-9f9c-9f2812b6ac64"
+      },
+      "expected_status": 403,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-018",
+      "name": "wrong operation",
+      "layer": "payload",
+      "changes": {
+        "operation_id": "c827ef04-9405-5c19-952e-ec2270a16cd4"
+      },
+      "expected_status": 403,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-019",
+      "name": "wrong object",
+      "layer": "payload",
+      "changes": {
+        "object.id": "80b60564-0ba8-53a0-bd21-aa4bbb79ec98"
+      },
+      "expected_status": 403,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-020",
+      "name": "wrong version",
+      "layer": "payload",
+      "changes": {
+        "object.version": 2
+      },
+      "expected_status": 403,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-021",
+      "name": "unknown payload field",
+      "layer": "payload",
+      "changes": {
+        "role": "approver"
+      },
+      "expected_status": 400,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-022",
+      "name": "float version",
+      "layer": "payload",
+      "changes": {
+        "object.version": 1.0
+      },
+      "expected_status": 400,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-023",
+      "name": "boolean version",
+      "layer": "payload",
+      "changes": {
+        "object.version": true
+      },
+      "expected_status": 400,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-024",
+      "name": "wrong_signature",
+      "layer": "signature",
+      "changes": {
+        "mode": "wrong_signature"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-025",
+      "name": "HS256",
+      "layer": "signature",
+      "changes": {
+        "mode": "HS256"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-026",
+      "name": "none",
+      "layer": "signature",
+      "changes": {
+        "mode": "none"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-027",
+      "name": "jku",
+      "layer": "signature",
+      "changes": {
+        "mode": "jku"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-028",
+      "name": "crit",
+      "layer": "signature",
+      "changes": {
+        "mode": "crit"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-029",
+      "name": "unknown_kid",
+      "layer": "signature",
+      "changes": {
+        "mode": "unknown_kid"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-030",
+      "name": "duplicate_claim",
+      "layer": "signature",
+      "changes": {
+        "mode": "duplicate_claim"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-031",
+      "name": "duplicate_header",
+      "layer": "signature",
+      "changes": {
+        "mode": "duplicate_header"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-032",
+      "name": "missing_caller",
+      "layer": "http",
+      "changes": {
+        "mode": "missing_caller"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-033",
+      "name": "wrong_caller",
+      "layer": "http",
+      "changes": {
+        "mode": "wrong_caller"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-034",
+      "name": "duplicate_authorization",
+      "layer": "http",
+      "changes": {
+        "mode": "duplicate_authorization"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-035",
+      "name": "duplicate_delegation",
+      "layer": "http",
+      "changes": {
+        "mode": "duplicate_delegation"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-036",
+      "name": "cookie_only",
+      "layer": "http",
+      "changes": {
+        "mode": "cookie_only"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-037",
+      "name": "extra_body",
+      "layer": "http",
+      "changes": {
+        "mode": "extra_body"
+      },
+      "expected_status": 400,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-038",
+      "name": "duplicate_json",
+      "layer": "http",
+      "changes": {
+        "mode": "duplicate_json"
+      },
+      "expected_status": 400,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-039",
+      "name": "caller_revoked",
+      "layer": "database",
+      "changes": {
+        "mode": "caller_revoked"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-040",
+      "name": "caller_expired",
+      "layer": "database",
+      "changes": {
+        "mode": "caller_expired"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-041",
+      "name": "key_revoked",
+      "layer": "database",
+      "changes": {
+        "mode": "key_revoked"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-042",
+      "name": "key_expired",
+      "layer": "database",
+      "changes": {
+        "mode": "key_expired"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-043",
+      "name": "key_future",
+      "layer": "database",
+      "changes": {
+        "mode": "key_future"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-044",
+      "name": "principal_inactive",
+      "layer": "database",
+      "changes": {
+        "mode": "principal_inactive"
+      },
+      "expected_status": 403,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-045",
+      "name": "tenant_inactive",
+      "layer": "database",
+      "changes": {
+        "mode": "tenant_inactive"
+      },
+      "expected_status": 403,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-046",
+      "name": "membership_inactive",
+      "layer": "database",
+      "changes": {
+        "mode": "membership_inactive"
+      },
+      "expected_status": 403,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-047",
+      "name": "role_revoked",
+      "layer": "database",
+      "changes": {
+        "mode": "role_revoked"
+      },
+      "expected_status": 403,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-048",
+      "name": "membership_revision",
+      "layer": "database",
+      "changes": {
+        "mode": "membership_revision"
+      },
+      "expected_status": 403,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-049",
+      "name": "session_revoked",
+      "layer": "database",
+      "changes": {
+        "mode": "session_revoked"
+      },
+      "expected_status": 403,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-050",
+      "name": "session_expired",
+      "layer": "database",
+      "changes": {
+        "mode": "session_expired"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-051",
+      "name": "session_idle",
+      "layer": "database",
+      "changes": {
+        "mode": "session_idle"
+      },
+      "expected_status": 401,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-052",
+      "name": "action_not_allowed",
+      "layer": "database",
+      "changes": {
+        "mode": "action_not_allowed"
+      },
+      "expected_status": 403,
+      "action": "trip.read"
+    },
+    {
+      "id": "SEC-DELEGATION-053",
+      "name": "valid human decision fixture",
+      "layer": "receipt",
+      "changes": {},
+      "expected_status": 200,
+      "action": "claim.decide"
+    },
+    {
+      "id": "SEC-DELEGATION-054",
+      "name": "receipt absent_reader",
+      "layer": "receipt",
+      "changes": {
+        "mode": "absent_reader"
+      },
+      "expected_status": 503,
+      "action": "claim.decide"
+    },
+    {
+      "id": "SEC-DELEGATION-055",
+      "name": "receipt missing",
+      "layer": "receipt",
+      "changes": {
+        "mode": "missing"
+      },
+      "expected_status": 403,
+      "action": "claim.decide"
+    },
+    {
+      "id": "SEC-DELEGATION-056",
+      "name": "receipt revoked",
+      "layer": "receipt",
+      "changes": {
+        "mode": "revoked"
+      },
+      "expected_status": 403,
+      "action": "claim.decide"
+    },
+    {
+      "id": "SEC-DELEGATION-057",
+      "name": "receipt actor",
+      "layer": "receipt",
+      "changes": {
+        "mode": "actor"
+      },
+      "expected_status": 403,
+      "action": "claim.decide"
+    },
+    {
+      "id": "SEC-DELEGATION-058",
+      "name": "receipt session",
+      "layer": "receipt",
+      "changes": {
+        "mode": "session"
+      },
+      "expected_status": 403,
+      "action": "claim.decide"
+    },
+    {
+      "id": "SEC-DELEGATION-059",
+      "name": "receipt operation",
+      "layer": "receipt",
+      "changes": {
+        "mode": "operation"
+      },
+      "expected_status": 403,
+      "action": "claim.decide"
+    },
+    {
+      "id": "SEC-DELEGATION-060",
+      "name": "receipt hash",
+      "layer": "receipt",
+      "changes": {
+        "mode": "hash"
+      },
+      "expected_status": 403,
+      "action": "claim.decide"
+    },
+    {
+      "id": "SEC-DELEGATION-061",
+      "name": "receipt version",
+      "layer": "receipt",
+      "changes": {
+        "mode": "version"
+      },
+      "expected_status": 403,
+      "action": "claim.decide"
+    },
+    {
+      "id": "SEC-DELEGATION-062",
+      "name": "receipt time_future",
+      "layer": "receipt",
+      "changes": {
+        "mode": "time_future"
+      },
+      "expected_status": 403,
+      "action": "claim.decide"
+    },
+    {
+      "id": "SEC-DELEGATION-063",
+      "name": "old human grant changed reason",
+      "layer": "payload",
+      "changes": {
+        "data.reason": "Receipt tidak lengkap."
+      },
+      "expected_status": 403,
+      "action": "claim.decide"
+    },
+    {
+      "id": "SEC-DELEGATION-064",
+      "name": "old human grant changed decision",
+      "layer": "payload",
+      "changes": {
+        "data.decision": "approve"
+      },
+      "expected_status": 403,
+      "action": "claim.decide"
+    },
+    {
+      "id": "SEC-DELEGATION-065",
+      "name": "old human grant changed stage",
+      "layer": "payload",
+      "changes": {
+        "data.stage": 2
+      },
+      "expected_status": 403,
+      "action": "claim.decide"
+    },
+    {
+      "id": "SEC-DELEGATION-066",
+      "name": "old human grant changed revision",
+      "layer": "payload",
+      "changes": {
+        "data.revision": 3
+      },
+      "expected_status": 403,
+      "action": "claim.decide"
+    },
+    {
+      "id": "SEC-DELEGATION-067",
+      "name": "valid claim.read",
+      "layer": "claims",
+      "changes": {},
+      "expected_status": 200,
+      "action": "claim.read"
+    },
+    {
+      "id": "SEC-DELEGATION-068",
+      "name": "valid operation.read",
+      "layer": "claims",
+      "changes": {},
+      "expected_status": 200,
+      "action": "operation.read"
+    },
+    {
+      "id": "SEC-DELEGATION-069",
+      "name": "valid claim.submit",
+      "layer": "claims",
+      "changes": {},
+      "expected_status": 200,
+      "action": "claim.submit"
+    },
+    {
+      "id": "SEC-DELEGATION-070",
+      "name": "valid claim.information",
+      "layer": "claims",
+      "changes": {},
+      "expected_status": 200,
+      "action": "claim.information"
+    }
+  ]
+}

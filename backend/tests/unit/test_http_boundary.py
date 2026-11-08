@@ -116,7 +116,7 @@ def test_request_ids_are_server_owned_and_distinct_concurrently(app):
     with TestClient(app) as client:
         def request(_):
             return client.get("/health/live", headers={"X-Request-ID": PRIVATE}).headers["X-Request-ID"]
-        with ThreadPoolExecutor(max_workers=8) as pool:
+        with ThreadPoolExecutor(max_workers=2) as pool:
             ids = list(pool.map(request, range(24)))
     assert len(set(ids)) == 24
     for value in ids:

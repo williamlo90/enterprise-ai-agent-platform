@@ -1,6 +1,7 @@
 """Standalone, operator-gated AWS probe. No application login/session is created."""
 
 import asyncio
+from contextlib import closing
 import base64
 import hashlib
 import hmac
@@ -14,6 +15,7 @@ from urllib.parse import parse_qsl, urlencode
 
 import boto3
 from botocore.config import Config
+from botocore.exceptions import ClientError
 from cryptography.fernet import Fernet
 
 from enterprise_ai_platform.config import OidcProbeSettings
@@ -179,32 +181,51 @@ class SpikeApplication:
 def handler(event, context):
     # SDK debug log records can contain signed headers or wire payloads.
     safe_transport_logs()
+    stage = "disabled"
     try:
         if os.environ.get("SPIKE_ENABLED") != "true":
             return response(404, {"status": "not_found"})
         remaining = context.get_remaining_time_in_millis() / 1000 if context is not None else 25
         deadline = ProbeDeadline(time.monotonic() + min(24, remaining - 1))
         left = deadline.remaining(reserve=3)
-        with boto3.client("secretsmanager", region_name="ap-southeast-1", config=Config(
+        stage = "secret_read"
+        with closing(boto3.client("secretsmanager", region_name="ap-southeast-1", config=Config(
             connect_timeout=min(1, left / 2), read_timeout=min(1, left / 2), retries={"total_max_attempts": 1},
-        )) as secrets_client:
+        ))) as secrets_client:
             secret_response = secrets_client.get_secret_value(SecretId=os.environ["SPIKE_SECRET_ARN"])
         deadline.remaining(reserve=3)
+        stage = "secret_decode"
         private = strict_json(secret_response["SecretString"].encode())
+        stage = "settings"
         settings = OidcProbeSettings(OIDC_CLIENT_SECRET=private["client_secret"])
         values = settings.model_dump()
         values["client_secret"] = settings.client_secret.get_secret_value()
+        stage = "provider"
         provider = CognitoProvider(**values)
         if not re.fullmatch(r"https://[a-z0-9]+\.lambda-url\.ap-southeast-1\.on\.aws", provider.public_origin):
             raise OidcRejected()
+        stage = "application"
         application = SpikeApplication(provider, private["operator_secret"], private["encryption_key"],
                                        DynamoSpikeStore(os.environ["SPIKE_TABLE_NAME"], deadline=deadline), deadline=deadline)
+        stage = "request"
         result = asyncio.run(application.handle(event))
     except StoreRejected:
         result = response(503, {"status": "unavailable"})
     except OidcRejected:
         result = response(400, {"status": "rejected"})
-    except Exception:
+    except Exception as error:
+        if stage != "request":
+            reason = "initialization_error"
+            if isinstance(error, ClientError):
+                code = error.response.get("Error", {}).get("Code")
+                reason = code if code in {"AccessDeniedException", "ResourceNotFoundException", "DecryptionFailure",
+                                          "InvalidRequestException", "InternalServiceError", "ThrottlingException"} else "aws_api_error"
+            elif type(error).__name__ in {"ConnectTimeoutError", "ReadTimeoutError", "EndpointConnectionError",
+                                          "SSLError", "ProxyConnectionError", "NoCredentialsError", "PartialCredentialsError",
+                                          "ParamValidationError", "AttributeError", "TypeError", "ValueError"}:
+                reason = type(error).__name__
+            logging.getLogger("enterprise_ai_platform.oidc_spike").warning(
+                "spike_initialization_failed stage=%s reason=%s", stage, reason)
         result = response(503, {"status": "unavailable"})
     logging.getLogger("enterprise_ai_platform.oidc_spike").info("spike_request status=%s", result["statusCode"])
     return result

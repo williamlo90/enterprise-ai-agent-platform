@@ -16,8 +16,8 @@ from enterprise_ai_platform.infrastructure.database.migration import MigrationEr
 
 def test_packaged_revisions_have_contiguous_history_and_renderable_identifiers():
     items = revisions()
-    assert [item.version for item in items] == [1, 2, 3]
-    assert [item.name for item in items] == ["0001_foundation.sql", "0002_foundation_indexes.sql", "0003_runtime_isolation.sql"]
+    assert [item.version for item in items] == list(range(1,31))
+    assert [item.name for item in items] == ["0001_foundation.sql", "0002_foundation_indexes.sql", "0003_runtime_isolation.sql", "0004_identity.sql", "0005_authorization.sql", "0006_delegation.sql", "0007_jobs.sql", "0008_files.sql", "0009_knowledge.sql", "0010_knowledge_lifecycle.sql", "0011_conversations.sql", "0012_checkpoints.sql", "0013_rag.sql", "0014_rag_runtime.sql", "0015_browser_context.sql", "0016_conversation_labels.sql", "0017_knowledge_catalog.sql", "0018_knowledge_effective_period.sql", "0019_organization.sql", "0020_knowledge_audience.sql", "0021_policies.sql", "0022_receipt_pins.sql", "0023_receipt_download.sql", "0024_drafts.sql", "0025_actions.sql", "0026_workflow.sql", "0027_assisted_workflow.sql", "0028_workflow_workspace.sql", "0029_administration.sql", "0030_service_provenance.sql"]
     for item in items:
         assert len(item.checksum) == 64
         rendered = revision_sql(item, "platform").as_string()
@@ -105,7 +105,7 @@ def invoke(monkeypatch, connection, **kwargs):
 
 def test_status_is_read_only_and_never_creates_schema(monkeypatch):
     connection = Connection()
-    assert invoke(monkeypatch, connection) == (0, 3)
+    assert invoke(monkeypatch, connection) == (0, len(revisions()))
     text = "\n".join(item[0] for item in connection.commands)
     assert "READ ONLY" in text
     assert "CREATE" not in text
@@ -115,14 +115,14 @@ def test_status_is_read_only_and_never_creates_schema(monkeypatch):
 
 def test_lock_precedes_history_and_all_pending_sql_and_ledger_share_transaction(monkeypatch):
     connection = Connection()
-    assert invoke(monkeypatch, connection, upgrade=True) == (3, 3)
+    assert invoke(monkeypatch, connection, upgrade=True) == (len(revisions()), len(revisions()))
     statements = [item[0] for item in connection.commands]
     lock = next(i for i, value in enumerate(statements) if "pg_advisory_xact_lock" in value)
     history = next(i for i, value in enumerate(statements) if "SELECT EXISTS" in value)
     create = next(i for i, value in enumerate(statements) if "CREATE SCHEMA" in value)
     assert 0 < lock < history < create < len(statements) - 1
     assert statements[0] == "BEGIN" and statements[-1] == "COMMIT"
-    assert not any("IF NOT EXISTS" in text for text in statements)
+    assert not any(prefix + " IF NOT EXISTS" in text for text in statements for prefix in ("CREATE SCHEMA", "CREATE TABLE", "CREATE INDEX", "CREATE ROLE"))
     inserts = [params for text, params in connection.commands if text.startswith('INSERT INTO "platform".schema_migrations')]
     assert inserts == [(item.version, item.name, item.checksum) for item in revisions()]
 

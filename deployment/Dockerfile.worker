@@ -1,0 +1,16 @@
+FROM ghcr.io/astral-sh/uv:0.11.26 AS uv
+FROM python:3.13-slim
+ARG KUBECTL_VERSION
+RUN test -n "$KUBECTL_VERSION" && apt-get update && apt-get install -y --no-install-recommends curl ca-certificates && \
+ curl -fsSLo /tmp/kubectl "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" && \
+ curl -fsSLo /tmp/kubectl.sha256 "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl.sha256" && \
+ echo "$(cat /tmp/kubectl.sha256)  /tmp/kubectl" | sha256sum --check && install -m 0755 /tmp/kubectl /usr/local/bin/kubectl && \
+ rm -rf /var/lib/apt/lists/* /tmp/kubectl /tmp/kubectl.sha256
+COPY --from=uv /uv /usr/local/bin/uv
+WORKDIR /app/backend
+COPY backend/pyproject.toml backend/uv.lock backend/README.md ./
+COPY backend/src ./src
+RUN uv sync --frozen --no-dev --no-editable
+ENV PATH="/app/backend/.venv/bin:$PATH" PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+USER 65532:65532
+CMD ["python","-m","enterprise_ai_platform.deployment_worker"]
