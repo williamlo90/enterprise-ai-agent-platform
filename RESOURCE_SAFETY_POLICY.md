@@ -12,6 +12,5 @@ Documentation changes use read-back, links, and static diffs. Do not start full 
 database probes, model inference, or cloud workloads for repository presentation changes.
 Stop only temporary processes created for the task; preserve user services and machine settings.
 
-Model-quality evaluation and deployment acceptance are owner-operated. Infrastructure definitions,
-example configuration, and available scripts do not automatically authorize provisioning, paid
-requests, migration, or deployment. GitHub workflows are manually invoked.
+Coordinate model evaluation, provisioning, paid requests, migrations, and deployment with the
+project owner before execution. GitHub workflows are manually invoked.

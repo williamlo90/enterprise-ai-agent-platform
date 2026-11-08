@@ -26,8 +26,8 @@ exact identity callbacks, private storage, restricted database roles, and contro
 Secrets belong in private local files or a secret manager, never frontend values or images.
 Runtime and migration credentials must remain separate.
 
-The [deployment runbook](deployment/README.md) covers activation, trust rotation, held recovery,
-and operator decisions. Prepared infrastructure is distinct from accepted production operation.
+The [deployment runbook](deployment/README.md) covers environment activation, trust rotation,
+isolated recovery, and controlled release.
 
 ## Repository hygiene
 

@@ -33,10 +33,10 @@ documented in the [frontend guide](frontend/README.md).
 
 ## Integration opt-ins
 
-Database, provider, storage, browser, and cloud checks require their configured environment and
-explicit execution. Never infer provider quality or operational readiness from controlled fixtures.
-Do not run database probes, inference, full suites, or deployment as a side effect of documentation
-maintenance. Model-quality and deployment acceptance are operator-owned activities.
+Run database, provider, storage, browser, and cloud checks against an explicitly configured
+environment. Choose the relevant integration path and coordinate execution with the operator.
+Documentation maintenance uses static checks; database probes, inference, full suites, and
+deployment are invoked separately.
 
 ## Repository presentation checks
 

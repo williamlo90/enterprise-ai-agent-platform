@@ -55,9 +55,9 @@ Workers use leases and fencing to avoid stale execution. An operation identity s
 an uncertain external result is reconciled through authoritative lookup rather than a new action.
 LangGraph checkpoints persist assisted progress while the human review remains explicit.
 
-The cloud package includes independent journal and held-restore/replay procedures. Those
-definitions are deployment preparation; operational acceptance belongs to the configured target.
-See the [operator runbook](deployment/README.md).
+The AWS deployment package includes an independent security journal, isolated restore,
+journal replay, and controlled release procedures. The [operator runbook](deployment/README.md)
+covers environment configuration, rollout, rollback, and recovery.
 
 ## Implementation map
 

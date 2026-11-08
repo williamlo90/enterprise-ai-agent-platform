@@ -1,21 +1,20 @@
-# Enterprise AI — paket deployment operator
+# Enterprise AI — deployment AWS
 
-**Implementasi disiapkan; belum dibangun, dideploy, atau diuji di AWS.** William
-mengambil alih pengujian penerimaan dan keputusan kualitas AI. QA tidak digunakan.
-Tidak ada klaim HA, capacity, keberhasilan restore, atau target RPO/RTO tercapai.
+Paket deployment mencakup container aplikasi, konfigurasi EKS, private service TLS,
+IAM, security journal Lambda/DynamoDB, backup, rollback, dan recovery.
+Panduan ini menjelaskan konfigurasi environment serta alur rilis dan operasi.
 
-| ID | Implementasi | Pelaksanaan William |
+| ID | Implementasi | Operasi |
 | --- | --- | --- |
 | FE-ENV-01 | Container frontend–API satu origin, private service TLS, config/secret renderer | Konfigurasi dan pemasangan environment |
 | FE-AUTH-01 | SPA auth enabled pada build; Cognito/BFF yang ada dipasang pada host sama; query logging off | Callback Cognito dan penggunaan login/logout/switch |
 | OPS-01 | Dockerfiles, ECR/journal/backup CloudFormation, cluster/IRSA policy, pipeline manual | Review resource/biaya, provision dan deploy |
-| OPS-02 | Probes/limits, replicas1–2, rolling/recreate, PDB, serial workers/parser, rollback | Rollout dan pengujian kapasitas pilihan sendiri |
-| JOURNAL-01 | Authoritative triggers/outbox; intent sebelum commit, result sesudah commit; independent DynamoDB chain/head/replay | Pemasangan journal/IAM dan pemeriksaan skenario sendiri |
+| OPS-02 | Probes/limits, replicas1–2, rolling/recreate, PDB, serial workers/parser, rollback | Konfigurasi rollout dan kapasitas |
+| JOURNAL-01 | Authoritative triggers/outbox; intent sebelum commit, result sesudah commit; independent DynamoDB chain/head/replay | Konfigurasi journal dan IAM |
 | OPS-03 | Backup DB/file versions/config; isolated held restore, journal replay/tombstones, release guard | Backup/restore dan rekonsiliasi pada target terisolasi |
-| OPS-04 | Runbook rilis/rollback/recovery dan lembar target operasi | Menetapkan target dan keputusan penerimaan |
+| OPS-04 | Runbook rilis/rollback/recovery dan lembar target operasi | Konfigurasi target operasi |
 
-MODEL-01/02 open-source tidak termasuk batch deployment Nova Pro ini. Kode yang
-tersedia tidak berarti layanan cloud atau pengujian pemilik sudah selesai.
+Provider model dipilih melalui konfigurasi environment dan diaktifkan secara eksplisit.
 
 ## Konfigurasi dalam satu tempat
 
@@ -36,7 +35,7 @@ multiline; jangan memasang dotenv multiline mentah lewat `--from-env-file` kubec
 ## Deployment — dijalankan operator
 
 1. Review resource cluster, NLB, node, Lambda, DynamoDB, ECR dan backup storage.
-   Budget uji lama bukan anggaran cluster. Ambil provider snapshot sebelum upgrade.
+   Tetapkan anggaran environment dan ambil provider snapshot sebelum upgrade.
 2. Isi `infra/aws/cluster.yaml`: supported EKS version, operator/VPN CIDR,
    secrets-encryption KMS untuk target. Jalankan `eksctl create cluster -f
    infra/aws/cluster.yaml`. Pasang Load Balancer Controller dengan IRSA mengikuti
@@ -74,7 +73,7 @@ multiline; jangan memasang dotenv multiline mentah lewat `--from-env-file` kubec
 10. DNS domain diarahkan ke NLB. Callback Cognito harus exact
     `https://<public-host>/api/v1/auth/callback`; PUBLIC_ORIGIN harus sama.
     Frontend memakai `/api` pada origin ini. `/internal` tidak diproxy publik.
-11. William menguji aplikasi. Aktifkan satu worker setelah registrasi/konfigurasi
+11. Periksa koneksi aplikasi. Aktifkan satu worker setelah registrasi/konfigurasi
     cocok. Eksekusi model memerlukan pilihan eksplisit EAI_ENABLE_MODEL_EXECUTION
     serta konfigurasi provider pada template environment, beserta persetujuan biaya/retensi/routing.
     Endpoint Singapore tidak mengubah Nova Pro APAC menjadi Singapore-only.
@@ -82,8 +81,8 @@ multiline; jangan memasang dotenv multiline mentah lewat `--from-env-file` kubec
 
 ## Operasi dan rollback
 
-- Replicas1 adalah baseline kecil, bukan HA. Replicas2 tersedia sebagai opsi;
-  capacity/availability tetap diukur William. Requests/limits dan probes ada.
+- Atur replicas sesuai kebutuhan environment. Konfigurasi menyediakan replicas1–2,
+  requests/limits, health probes, dan kebijakan rollout.
 - Worker tunggal memakai Recreate; owning consumers mempertahankan heartbeat,
   lease/generation yang ada. Tidak ada daemon otomatis dari import API.
 - Parser pod per file, quota1/CPU1/memory512Mi, read-only filesystem, dropped caps,
@@ -94,8 +93,8 @@ multiline; jangan memasang dotenv multiline mentah lewat `--from-env-file` kubec
   Schema database tidak diturunkan. Simpan SHA image sebelumnya.
 - TLS verification tetap aktif. Private CA hanya menambah trust interservice.
   Jangan log payload, cookie, token, prompt atau query callback.
-- Isi `operations-targets.example.json`: target availability, RPO/RTO, queue lag,
-  budget, retention dan rotation. Nilai null berarti belum diputuskan, bukan nol.
+- Isi `operations-targets.example.json` dengan target availability, RPO/RTO,
+  queue lag, budget, retention, dan rotation untuk environment yang digunakan.
 
 ## Backup → restore → replay → release
 
@@ -127,11 +126,11 @@ file privat berada pada encrypted operator workspace di luar Git/OneDrive.
    committed outbox idempotently, lalu memeriksa applied denies, terminal actions
    dan current watermark. Jika journal maju, replay tail dan release lagi.
    Release tidak otomatis start pod. Claim tenant quarantine tetap dipertahankan.
-8. Replay menonaktifkan key/caller/job credentials lama dan mengosongkan login/JWKS cache. Enroll fresh keys/callers setelah replay final; rotate/approve current secrets dan roles/policy. Setelah keputusan William,
+8. Replay menonaktifkan key/caller/job credentials lama dan mengosongkan login/JWKS cache. Enroll fresh keys/callers setelah replay final; rotate/approve current secrets dan roles/policy. Setelah pemeriksaan recovery,
    arahkan host ke target dan mulai consumer baru. Old jobs tidak otomatis hidup.
 
 ## Rujukan primer
 
 - [AWS Load Balancer Controller](https://docs.aws.amazon.com/eks/latest/userguide/lbc-helm.html)
 - [Atomic DynamoDB transactions](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_TransactWriteItems.html)
-- ARCHITECTURE.md, DATA_AND_API_CONTRACTS.md dan task plan adalah kontrak sumber.
+- [Arsitektur](../ARCHITECTURE.md) dan [kontrak data/API](../DATA_AND_API_CONTRACTS.md).

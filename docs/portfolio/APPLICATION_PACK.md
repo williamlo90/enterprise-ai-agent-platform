@@ -35,6 +35,6 @@ to current permissions, explicit consent, durable execution, and service-owned t
 | Transactions | Why an independent service owns claim effects and durable receipts. |
 | Reliability | How operation identity and lookup recover an unknown outcome safely. |
 | Architecture | How ports and adapters keep domain logic independent of infrastructure. |
-| Operations | Why deployment preparation and operator acceptance are distinct. |
+| Operations | How container releases, private routing, security journaling, and recovery fit together. |
 
 See the [case study](CASE_STUDY.md) and [product tour](../product-tour/README.md).

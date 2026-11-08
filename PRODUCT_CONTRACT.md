@@ -40,10 +40,10 @@ uploads preserve evidence; the product does not claim OCR verification of receip
 
 ## Delivery scope
 
-The repository includes locally integrated knowledge, conversation, reimbursement, approval,
-administration, and conversation-privacy flows. Cloud operations and provider-quality acceptance
-are explicit operator activities. The business integration is the project's independent reference
-service. Payments and commercial ERP integration are outside scope.
+The repository includes knowledge, conversation, reimbursement, approval, administration, and
+conversation-privacy flows. The AWS deployment package provides infrastructure templates,
+container release tooling, and recovery procedures. The business integration uses the project's
+independent reimbursement service. Payments and commercial ERP integration are outside scope.
 
 See [architecture](ARCHITECTURE.md), [contracts](DATA_AND_API_CONTRACTS.md), and the
 [product tour](docs/product-tour/README.md).

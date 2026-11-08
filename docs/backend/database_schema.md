@@ -24,7 +24,7 @@ part of the application boundary.
 
 SQL is packaged with the owning application and bound to migration history by checksum. Changes
 are forward-only; applied migration source is immutable. API startup does not apply migrations.
-The packaged migration history describes available source, not the schema installed on a target.
+Check the target's migration status before selecting the release boundary and applying an upgrade.
 
 - [Platform migration source](../../backend/src/enterprise_ai_platform/infrastructure/database/migrations/)
 - [Reference-service source and migration package](../../reference_service/src/reimbursement_service/)
