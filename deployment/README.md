@@ -76,7 +76,7 @@ multiline; jangan memasang dotenv multiline mentah lewat `--from-env-file` kubec
     Frontend memakai `/api` pada origin ini. `/internal` tidak diproxy publik.
 11. William menguji aplikasi. Aktifkan satu worker setelah registrasi/konfigurasi
     cocok. Eksekusi model memerlukan pilihan eksplisit EAI_ENABLE_MODEL_EXECUTION
-    dan EAI_FICTIONAL_APAC_ENABLED beserta penerimaan biaya/retensi/routing.
+    serta konfigurasi provider pada template environment, beserta persetujuan biaya/retensi/routing.
     Endpoint Singapore tidak mengubah Nova Pro APAC menjadi Singapore-only.
     Privacy tetap false sampai policy serta owning physical evidence lengkap.
 

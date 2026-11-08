@@ -20,7 +20,7 @@ and scoped administration. A FastAPI platform coordinates identity, knowledge, d
 consent, jobs, and checkpoints. PostgreSQL/pgvector supplies transactional persistence and
 retrieval. A separate service owns the business state and operation receipts.
 
-The [product tour](../product-tour/README.md) shows fictional local application views.
+See the [product tour](../product-tour/README.md) for the application screens.
 
 ## Decisions that shape the system
 
@@ -69,7 +69,7 @@ and [data contracts](../../DATA_AND_API_CONTRACTS.md) for implementation detail.
 
 This project demonstrates full-stack AI product engineering across retrieval, identity,
 human review, durable orchestration, transaction correctness, privacy, and operational tooling.
-The business workflows are integrated locally. The cloud package provides deployment preparation;
-target operation and model-quality acceptance remain explicit operator responsibilities.
+The repository includes the application, independent business service, infrastructure templates,
+and release/recovery tooling.
 
 Use the [application pack](APPLICATION_PACK.md) for concise professional descriptions.

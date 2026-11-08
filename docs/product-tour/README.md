@@ -1,45 +1,32 @@
 # Product tour
 
-These screenshots were captured from the local application using fictional development fixtures.
-They show application surfaces, not a public hosted deployment or a fresh execution of the
-business workflow. Captures are reused unchanged from the existing local frontend walkthroughs.
-Displayed amounts, dates, identifiers, and policy text belong to fictional examples.
+Explore the workspace for policy questions, source inspection, and document management.
 
-## Search and inspect policy
+## Find a policy and read the source
 
-![Policy search with source inspection](source-search.png)
+Search company documents and open a result alongside the source text. The source panel keeps
+the document version and passage visible while you read.
 
-The user can search accessible company documents and inspect the extracted passage alongside
-the result. Source version and publication state remain visible.
+![Source search and policy passage](workspace-dark.png)
 
-## Prepare and review reimbursement
+## Ask a question and inspect the citation
 
-![Reimbursement preparation and confirmation](reimbursement.png)
+Conversations connect answers to the supporting policy. Open a citation to read the passage
+without leaving the conversation.
 
-The shared form brings expense selection, receipt versions, rule preview, and approval routing
-together before the user confirms submission. Both manual and assisted preparation use this flow.
+![Conversation with its supporting source](conversation.png)
 
-## Review an assigned claim
+## Manage company documents
 
-![Human approval workspace](approval.png)
+The document workspace brings uploads, active versions, and publication controls together.
+Open a document to inspect its content and manage its lifecycle.
 
-The reviewer sees claim details, supporting receipts, the bound rules, approval stages, and
-the decision controls associated with the current revision.
+![Company document workspace](documents.png)
 
-## Administer the tenant workspace
+## Light appearance
 
-![Scoped administration](administration.png)
+The workspace also supports a light appearance, with the same source inspection layout.
 
-Scoped administrators can inspect and edit granted configuration through a reviewable change flow.
-Configuration authority remains separate from employee private-content access.
+![Source inspection in light appearance](source-search.png)
 
-## Capture provenance
-
-| Image | Existing capture origin |
-| --- | --- |
-| Policy search | Source-search walkthrough, `fe-source-01`. |
-| Reimbursement | Manual reimbursement walkthrough, `fe-wf-01`. |
-| Approval | Workflow administration walkthrough, `fe-workflow-admin`. |
-| Administration | Workflow administration walkthrough, `fe-workflow-admin`. |
-
-[Back to project](../../README.md) · [Engineering case study](../portfolio/CASE_STUDY.md)
+[Back to project](../../README.md) | [Architecture](../../ARCHITECTURE.md)

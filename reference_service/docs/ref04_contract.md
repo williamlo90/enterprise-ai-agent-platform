@@ -1,7 +1,7 @@
 # REF-04 trips and immutable package receiver
 
 This task stores reference data in the service's own database. Trips/items are
-fictional operator-provisioned data, not evaluation seeds or model-writable data.
+operator-provisioned reference data, not model-writable records.
 Packages are immutable copies. Receipt acknowledgement is not policy activation,
 eligibility, verified document publication, claim submission or approval.
 

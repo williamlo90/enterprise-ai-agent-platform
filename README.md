@@ -1,142 +1,103 @@
 # Enterprise AI Agent Platform
 
-A multi-tenant workspace that connects company knowledge to human-approved business workflows.
+Company knowledge, reimbursement, and approvals in an AI-assisted workspace.
 
-Employees can ask policy questions, inspect the supporting sources, prepare travel reimbursements,
-and follow an application through review. Knowledge managers control document publication and
-audiences; reviewers act on the exact submission in front of them. AI assistance works within
-server-enforced identity, policy, and transaction boundaries.
+Ask a policy question, open the source, prepare a reimbursement, and follow it through review.
+The platform brings these steps together with separate company workspaces, document controls,
+and explicit human approval.
 
-> Find the policy. Review the evidence. Confirm the action.
+![Knowledge search with source inspection](docs/product-tour/workspace-dark.png)
 
-[![Company policy search and source inspection](docs/product-tour/source-search.png)](docs/product-tour/README.md)
+[Product tour](docs/product-tour/README.md) | [Architecture](ARCHITECTURE.md) | [Case study](docs/portfolio/CASE_STUDY.md) | [Getting started](docs/GETTING_STARTED.md)
 
-[Product tour](docs/product-tour/README.md) · [Engineering case study](docs/portfolio/CASE_STUDY.md) · [Architecture](ARCHITECTURE.md) · [Local setup](docs/GETTING_STARTED.md)
+## What it does
 
-## Why it exists
+| Area | Capabilities |
+| --- | --- |
+| Knowledge assistant | Indonesian and English conversations, cited answers, and source inspection. |
+| Document management | Upload, text preview, versioning, publication, audience rules, and withdrawal. |
+| Reimbursement | Manual or assisted preparation, receipt attachments, policy review, and confirmation. |
+| Approvals | Assigned reviews, approval, rejection, requests for information, and status tracking. |
+| Administration | Company membership, roles, configuration, and business policies. |
 
-Company knowledge and operational workflows often live apart. An employee can find a travel
-policy but still needs to understand the applicable version, gather receipts, prepare a claim,
-and reach the correct approver. An AI answer becomes useful when that entire path stays
-inspectable and under the right person's control.
-
-This project brings policy retrieval, document governance, reimbursement preparation, approval,
-and recovery into a shared application foundation.
-
-## Product workflow
+## From a question to an action
 
 ```text
-Company workspace → Policy question → Inspect cited sources
-                  → Prepare reimbursement → Review and confirm
-                  → Approval → Submission status and receipt
+Ask about policy -> Inspect the source -> Prepare a draft
+                -> Review and confirm -> Approval -> Track the result
 ```
 
-| Workspace | What users can do |
-| --- | --- |
-| Conversations | Ask in Indonesian or English, revisit owned conversations, and open cited passages. |
-| Knowledge | Upload documents, inspect extracted text, publish versions, set audiences, and withdraw content. |
-| Reimbursements | Prepare a claim manually or with AI assistance, attach receipts, and review applicable rules. |
-| Approvals | Inspect the submission and evidence, approve, reject, or request information within current authority. |
-| Administration | Manage scoped membership, configuration, business policies, and operational status. |
+Employees can start from a conversation or prepare a reimbursement directly. Both paths use
+the same editable draft and review form. The user checks the details and confirms before
+the platform submits an action.
 
-## Product tour
+![Conversation with the cited policy open](docs/product-tour/conversation.png)
 
-<table>
-  <tr>
-    <td width="50%"><a href="docs/product-tour/source-search.png"><img src="docs/product-tour/source-search.png" alt="Fictional company policy search with the source text open"></a><br><strong>Inspect the source</strong><br>Read the policy passage alongside search results.</td>
-    <td width="50%"><a href="docs/product-tour/reimbursement.png"><img src="docs/product-tour/reimbursement.png" alt="Reimbursement form with fictional receipts and a review before submission"></a><br><strong>Review before submitting</strong><br>Check expenses, attachments, rules, and the approval route.</td>
-  </tr>
-  <tr>
-    <td width="50%"><a href="docs/product-tour/approval.png"><img src="docs/product-tour/approval.png" alt="Reviewer workspace for a fictional reimbursement"></a><br><strong>Keep decisions human</strong><br>Review the exact claim and record an authorized decision.</td>
-    <td width="50%"><a href="docs/product-tour/administration.png"><img src="docs/product-tour/administration.png" alt="Scoped tenant administration with fictional configuration"></a><br><strong>Govern each workspace</strong><br>Manage configuration through scoped administrative controls.</td>
-  </tr>
-</table>
+## How it is built
 
-These are application captures using fictional local fixtures. The [tour](docs/product-tour/README.md)
-explains each view. They illustrate the interface rather than a public hosted deployment.
+The frontend uses React and TypeScript. A FastAPI backend coordinates identity, knowledge,
+conversations, drafts, and background work. PostgreSQL and pgvector hold application state
+and retrieval indexes; LangGraph checkpoints preserve assisted workflow progress.
 
-## Engineering highlights
-
-- **Tenant and session boundaries:** Cognito-backed identity, opaque server-side sessions, CSRF
-  protection, current-authority checks, and PostgreSQL row-level security.
-- **Governed retrieval:** versioned documents, audience-aware retrieval, source citations, and
-  renewed access checks when content is read.
-- **Explicit human consent:** manual and assisted preparation converge on a shared draft and
-  review flow; confirmation is bound to the reviewed version.
-- **Durable execution:** job leases, idempotent operation identity, checkpointed workflows, and
-  receipt lookup support recovery without blindly repeating a consequential action.
-- **Independent business enforcement:** a separately packaged reimbursement service owns claim
-  state, approval stages, its database authority, and transaction outcomes.
-- **Data lifecycle controls:** policy-bound inventory, retention checks, conversation erasure,
-  and private export are implemented behind explicit configuration.
-- **Operational preparation:** container definitions, AWS infrastructure templates, private
-  service routing, security-journal integration, and operator recovery runbooks are included.
-
-## Architecture
+A separate reimbursement service owns claim state, business rules, approval stages, and
+operation receipts. Model adapters provide assistance within application-controlled permissions.
 
 ```mermaid
 flowchart LR
-    USER[Employee or reviewer] --> WEB[React and TypeScript workspace]
-    ID[Cognito identity] --> API[FastAPI platform]
-    WEB --> API
-    API --> KNOW[Knowledge and source authorization]
-    KNOW --> MODEL[Configured model and embedding adapters]
-    API --> DRAFT[Shared draft and human confirmation]
-    DRAFT --> JOB[Durable jobs and LangGraph checkpoints]
-    JOB --> REF[Independent reimbursement service]
-    REF --> RECEIPT[Claim state and operation receipts]
-    API --> DB[Platform PostgreSQL and pgvector]
-    REF --> RDB[Service-owned PostgreSQL]
-    KNOW --> FILE[Private object storage]
+    UI[React workspace] --> API[FastAPI platform]
+    API --> KNOW[Knowledge and sources]
+    KNOW --> AI[Model adapters]
+    API --> REVIEW[Draft and human confirmation]
+    REVIEW --> WORK[Jobs and LangGraph]
+    WORK --> REF[Reimbursement service]
+    API --> DB[PostgreSQL and pgvector]
+    KNOW --> FILES[Private object storage]
+    REF --> RESULT[Claim state and receipts]
 ```
 
-The platform is a modular Python application shared by API and worker processes. The
-reimbursement service has independent packaging, credentials, and migrations. Model output
-supplies assistance; application and service controls authorize actions.
+## Engineering decisions
 
-**Stack:** React, TypeScript, Vite, FastAPI, Python, LangGraph, PostgreSQL/pgvector, Cognito,
-private S3 storage, and configurable model adapters. The AWS deployment package targets EKS
-with an independent Lambda/DynamoDB security journal.
+- **Current access checks:** sessions, company membership, and source permissions are checked
+  when protected content or actions are requested.
+- **Version-bound review:** confirmation applies to the draft and rules the user reviewed.
+- **Recoverable execution:** stable operation keys, job leases, checkpoints, and receipt lookup
+  help recover interrupted workflows.
+- **Independent business rules:** the reimbursement service enforces its own authorization
+  and commits business effects with their receipts.
+- **Data lifecycle controls:** policy-bound inventory, conversation erasure, and private export
+  are available through explicit configuration.
 
-## Explore locally
+The [case study](docs/portfolio/CASE_STUDY.md) explains these decisions. Container definitions,
+AWS infrastructure templates, and release/recovery procedures are in the [deployment guide](deployment/README.md).
 
-Start with the [local setup guide](docs/GETTING_STARTED.md). The default configuration supports
-API bootstrap and a public frontend shell without paid model credentials. Authenticated business
-flows use explicitly configured identity, storage, databases, and the reference service.
+## Run locally
+
+Requirements and frontend setup are in [Getting started](docs/GETTING_STARTED.md).
+From the repository root:
 
 ```powershell
-git clone https://github.com/williamlo90/enterprise-ai-agent-platform.git
-cd enterprise-ai-agent-platform
 python -m uv sync --locked --project backend
 python -m uv run --locked --project backend enterprise-ai-api --env-file .env.example
 ```
 
-Development API documentation is served at `http://127.0.0.1:8000/docs`.
-See the [frontend guide](frontend/README.md) for the browser workspace.
+Open `http://127.0.0.1:8000/docs` for the development API. See the
+[frontend guide](frontend/README.md) for the browser workspace and configuration.
 
-## Project scope
+## Repository guide
 
-The knowledge, reimbursement, approval, and administration workflows have been integrated and
-accepted locally. Cloud deployment and model-quality acceptance are separate operator activities;
-the [deployment package](deployment/README.md) contains the implementation and runbook for those
-steps. The reference service is built for this project. Reimbursement payments and commercial ERP
-integration are outside the product scope.
-
-## Documentation
-
-| Start here | Purpose |
+| Location | Contents |
 | --- | --- |
-| [Documentation index](docs/README.md) | Product, architecture, setup, security, and operations. |
-| [Engineering case study](docs/portfolio/CASE_STUDY.md) | Product reasoning and engineering decisions. |
-| [Application pack](docs/portfolio/APPLICATION_PACK.md) | Portfolio description, CV bullets, and interview talking points. |
-| [Product contract](PRODUCT_CONTRACT.md) | Users, responsibilities, and workflow boundaries. |
-| [Data and API contracts](DATA_AND_API_CONTRACTS.md) | Ownership, authorization, and transaction semantics. |
-| [Security policy](SECURITY.md) | Trust boundaries and private vulnerability reporting. |
-| [Verification guide](TEST_PLAN.md) | Verification approach and explicit integration opt-ins. |
-| [Deployment runbook](deployment/README.md) | Operator configuration, release, and recovery. |
+| [frontend](frontend/) | React workspace and browser components. |
+| [backend](backend/) | Platform API, modules, workers, and migrations. |
+| [reference_service](reference_service/) | Independent reimbursement service. |
+| [deployment](deployment/) | Containers, routing, release, and recovery tools. |
+| [infra](infra/) | AWS infrastructure and security-journal definitions. |
+| [docs](docs/README.md) | Product, architecture, setup, and portfolio documentation. |
+
+[Product contract](PRODUCT_CONTRACT.md) | [Data and API contracts](DATA_AND_API_CONTRACTS.md) | [Security](SECURITY.md) | [Verification](TEST_PLAN.md) | [Application pack](docs/portfolio/APPLICATION_PACK.md)
 
 ## Source use
 
-Copyright (c) 2026 williamlo90. All rights reserved. This repository is available for portfolio
-review under the [source-use notice](LICENSE). Third-party components retain their own licenses;
-frontend attribution is recorded in [third-party notices](frontend/THIRD_PARTY_NOTICES.md).
+Copyright (c) 2026 williamlo90. All rights reserved. Available for portfolio review under the
+[source-use notice](LICENSE). Third-party attribution is preserved in
+[frontend notices](frontend/THIRD_PARTY_NOTICES.md).

@@ -33,4 +33,4 @@ and operator decisions. Prepared infrastructure is distinct from accepted produc
 
 Environment files, private keys, generated manifests, raw traces, local engineering records,
 and runtime caches are ignored. Example files contain configuration shape rather than credentials.
-Public screenshots use fictional data. Dependency and adapted-component notices remain intact.
+Keep private company content out of public screenshots. Dependency and component notices remain intact.

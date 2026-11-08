@@ -2,7 +2,7 @@
 
 ## Product and portfolio
 
-- [Product tour](product-tour/README.md): application views with fictional data.
+- [Product tour](product-tour/README.md): application screens and feature walkthroughs.
 - [Engineering case study](portfolio/CASE_STUDY.md): problem, architecture, and decisions.
 - [Application pack](portfolio/APPLICATION_PACK.md): recruiter summary and interview material.
 - [Product contract](../PRODUCT_CONTRACT.md): roles, user journeys, and scope.
