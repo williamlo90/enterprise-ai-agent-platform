@@ -22,7 +22,7 @@ from enterprise_ai_platform.integrations.checkpoints.assisted_graph import build
 async def main_loop():
  settings=load_settings(None);resources=build_resources(settings);resources.background_refresh=False;stop=asyncio.Event();loop=asyncio.get_running_loop()
  for signum in (signal.SIGTERM,signal.SIGINT):loop.add_signal_handler(signum,stop.set)
- parser=KubernetesFileParser(os.environ['EAI_PARSER_IMAGE_URI']);repo=PostgresJobRepository(resources.database)
+ parser=None;repo=PostgresJobRepository(resources.database)
  scheduler=JobService(repo,os.environ['SCHEDULER_CREDENTIAL']);executors=json.loads(os.environ['EXECUTORS_JSON'])
  try:
   async with resources.lifecycle():
@@ -41,12 +41,15 @@ async def main_loop():
      jobs=JobService(repo,key);lease=Lease(UUID(claim['id']),UUID(claim['tenant_id']),claim['generation'])
      ref=await jobs.reference(lease)
      async def work():
+      nonlocal parser
       kind=ref['job_type']
       if kind=='file.inspect':
+       if parser is None:parser=KubernetesFileParser(os.environ['EAI_PARSER_IMAGE_URI'])
        return await FileInspection(PostgresFileRepository(resources.database),resources.storage,parser,jobs,jobs._credential_hash).process(claim)
       if kind in ('knowledge.ingest','agent.resume') and os.environ.get('EAI_ENABLE_MODEL_EXECUTION')!='true':
        await jobs.fail(lease,'forbidden');return
       if kind=='knowledge.ingest':
+       if parser is None:parser=KubernetesFileParser(os.environ['EAI_PARSER_IMAGE_URI'])
        client=bound_session().client('bedrock-runtime',region_name='ap-southeast-1',endpoint_url=ENDPOINT,config=NOVA_SDK_CONFIG)
        try:
         control=bound_session().client('bedrock',region_name='ap-southeast-1',config=NOVA_SDK_CONFIG)
@@ -59,6 +62,12 @@ async def main_loop():
        finally:client.close()
       if kind=='agent.resume':
        if os.environ.get('EAI_FICTIONAL_APAC_ENABLED')!='true':raise ValueError('Model scope not enabled')
+       backend=os.environ.get('EAI_AGENT_EXECUTION_BACKEND','local')
+       if backend not in ('local','agentcore'):raise ValueError('Unknown agent execution backend')
+       if backend=='agentcore':
+        from enterprise_ai_platform.integrations.agentcore.clients import invoke_runtime
+        envelope={name:claim[name] for name in ('id','tenant_id','generation','worker_id')}
+        return await invoke_runtime(os.environ['EAI_AGENTCORE_RUNTIME_ARN'],'ap-southeast-1',envelope,jobs,lease)
        async with resources.database.transaction() as c:
         route=(await (await c.execute(sql.SQL('SELECT {}.worker_route(%s)').format(sql.Identifier(resources.database.schema)),(Jsonb(dict(credential_hash=jobs._credential_hash,id=claim['id'],generation=claim['generation'])),))).fetchone())[0]
        if route.get('status')!='ok':raise ValueError()
@@ -81,7 +90,8 @@ async def main_loop():
      print('{"event":"worker_held"}',flush=True)
      try:await asyncio.wait_for(stop.wait(),timeout=2)
      except TimeoutError:pass
- finally:await parser.close()
+ finally:
+  if parser is not None:await parser.close()
 
 def main():
  logging.disable(logging.CRITICAL)

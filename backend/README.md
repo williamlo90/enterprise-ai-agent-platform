@@ -39,6 +39,10 @@ The [architecture guide](../docs/backend/architecture.md) explains dependency ru
 
 ## Connected operation
 
+The worker supports an optional [AgentCore execution path](../deployment/agentcore/README.md).
+Install the `agentcore` extra for that worker/Runtime environment. Its default execution path
+remains local; selecting the remote path requires the configured Runtime ARN.
+
 Identity, browser context, storage, provider use, privacy, and background execution are explicitly
 configured. Startup does not apply migrations or make model requests automatically. Same-origin
 HTTPS, Cognito callback configuration, restricted database roles, registered tenants/callers, and

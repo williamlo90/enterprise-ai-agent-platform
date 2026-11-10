@@ -24,5 +24,6 @@
 - [Frontend](../frontend/README.md)
 - [Reimbursement service](../reference_service/README.md)
 - [Deployment and recovery](../deployment/README.md)
+- [AgentCore integration](../deployment/agentcore/README.md)
 - [Contribution guide](../CONTRIBUTING.md)
 - [Resource policy](../RESOURCE_SAFETY_POLICY.md)

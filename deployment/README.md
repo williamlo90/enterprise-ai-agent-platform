@@ -4,6 +4,9 @@ Paket deployment mencakup container aplikasi, konfigurasi EKS, private service T
 IAM, security journal Lambda/DynamoDB, backup, rollback, dan recovery.
 Panduan ini menjelaskan konfigurasi environment serta alur rilis dan operasi.
 
+Jalur agent melalui Runtime, Gateway, Memory, dan workload identity dijelaskan di
+[integrasi AgentCore](agentcore/README.md), termasuk container, IAM, dan konfigurasi worker.
+
 | ID | Implementasi | Operasi |
 | --- | --- | --- |
 | FE-ENV-01 | Container frontend–API satu origin, private service TLS, config/secret renderer | Konfigurasi dan pemasangan environment |

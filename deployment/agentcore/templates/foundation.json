@@ -1,0 +1,89 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Enterprise AI AgentCore image repositories and private runtime configuration.",
+  "Parameters": {
+    "Prefix": {
+      "Type": "String",
+      "Default": "enterprise-ai-agent",
+      "AllowedPattern": "[a-z][a-z0-9-]{2,35}"
+    }
+  },
+  "Resources": {
+    "RuntimeRepository": {
+      "Type": "AWS::ECR::Repository",
+      "Properties": {
+        "RepositoryName": {
+          "Fn::Sub": "${Prefix}-runtime"
+        },
+        "ImageTagMutability": "IMMUTABLE",
+        "ImageScanningConfiguration": {
+          "ScanOnPush": false
+        },
+        "LifecyclePolicy": {
+          "LifecyclePolicyText": "{\"rules\": [{\"rulePriority\": 1, \"description\": \"Keep recent immutable images\", \"selection\": {\"tagStatus\": \"any\", \"countType\": \"imageCountMoreThan\", \"countNumber\": 3}, \"action\": {\"type\": \"expire\"}}]}"
+        }
+      }
+    },
+    "RuntimeConfiguration": {
+      "Type": "AWS::SecretsManager::Secret",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "${Prefix}/runtime"
+        },
+        "Description": "Runtime restricted runtime configuration"
+      }
+    },
+    "ToolsRepository": {
+      "Type": "AWS::ECR::Repository",
+      "Properties": {
+        "RepositoryName": {
+          "Fn::Sub": "${Prefix}-tools"
+        },
+        "ImageTagMutability": "IMMUTABLE",
+        "ImageScanningConfiguration": {
+          "ScanOnPush": false
+        },
+        "LifecyclePolicy": {
+          "LifecyclePolicyText": "{\"rules\": [{\"rulePriority\": 1, \"description\": \"Keep recent immutable images\", \"selection\": {\"tagStatus\": \"any\", \"countType\": \"imageCountMoreThan\", \"countNumber\": 3}, \"action\": {\"type\": \"expire\"}}]}"
+        }
+      }
+    },
+    "ToolsConfiguration": {
+      "Type": "AWS::SecretsManager::Secret",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "${Prefix}/tools"
+        },
+        "Description": "Tools restricted runtime configuration"
+      }
+    }
+  },
+  "Outputs": {
+    "RuntimeRepositoryUri": {
+      "Value": {
+        "Fn::GetAtt": [
+          "RuntimeRepository",
+          "RepositoryUri"
+        ]
+      }
+    },
+    "RuntimeSecretArn": {
+      "Value": {
+        "Ref": "RuntimeConfiguration"
+      }
+    },
+    "ToolsRepositoryUri": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ToolsRepository",
+          "RepositoryUri"
+        ]
+      }
+    },
+    "ToolsSecretArn": {
+      "Value": {
+        "Ref": "ToolsConfiguration"
+      }
+    }
+  }
+}

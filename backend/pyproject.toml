@@ -26,6 +26,9 @@ enterprise-ai-migrate = "enterprise_ai_platform.migration_cli:main"
 enterprise-ai-security = "enterprise_ai_platform.security_cli:main"
 enterprise-ai-oidc-check = "enterprise_ai_platform.oidc_check:main"
 
+[project.optional-dependencies]
+agentcore = ["aws-opentelemetry-distro==0.22.0"]
+
 [dependency-groups]
 dev = [
     "httpx2>=2.16,<3",

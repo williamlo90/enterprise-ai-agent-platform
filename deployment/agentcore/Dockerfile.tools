@@ -1,0 +1,8 @@
+FROM --platform=linux/arm64 public.ecr.aws/lambda/python:3.13
+COPY backend/ ${LAMBDA_TASK_ROOT}/backend/
+RUN pip install --no-cache-dir uv==0.11.26 && \
+    uv export --frozen --project ${LAMBDA_TASK_ROOT}/backend --extra agentcore --no-dev --no-emit-project -o /tmp/requirements.txt && \
+    pip install --no-cache-dir -r /tmp/requirements.txt && \
+    pip install --no-deps ${LAMBDA_TASK_ROOT}/backend
+ENV PYTHONUNBUFFERED=1
+CMD ["enterprise_ai_platform.agentcore_tools.handler"]

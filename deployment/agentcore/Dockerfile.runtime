@@ -1,0 +1,21 @@
+FROM --platform=linux/arm64 python:3.13-slim
+WORKDIR /app
+RUN pip install --no-cache-dir uv==0.11.26
+COPY backend/ backend/
+RUN uv sync --frozen --project backend --extra agentcore --no-dev
+ENV PATH="/app/backend/.venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 \
+    OTEL_PYTHON_DISTRO=aws_distro \
+    OTEL_PYTHON_CONFIGURATOR=aws_configurator \
+    OTEL_TRACES_EXPORTER=otlp \
+    OTEL_METRICS_EXPORTER=none \
+    OTEL_LOGS_EXPORTER=none \
+    OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf \
+    OTEL_PYTHON_FASTAPI_EXCLUDED_URLS=".*/ping" \
+    OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=false \
+    TRACELOOP_TRACE_CONTENT=false \
+    OTEL_BSP_MAX_EXPORT_BATCH_SIZE=64 \
+    OTEL_RESOURCE_ATTRIBUTES="service.name=enterprise-ai-agentcore"
+USER 10001:10001
+EXPOSE 8080
+CMD ["opentelemetry-instrument", "uvicorn", "enterprise_ai_platform.agentcore_runtime:app", "--host", "0.0.0.0", "--port", "8080", "--no-access-log"]

@@ -9,7 +9,7 @@ PACKAGES = (
     ("backend/src", "enterprise_ai_platform"),
     ("reference_service/src", "reimbursement_service"),
 )
-ROOT_FILES = {"main", "internal_api", "worker", "composition", "database_check", "migration_cli", "migration_pattern_check", "security_cli", "oidc_check", "oidc_spike_lambda", "identity_check", "authorization_check", "delegation_check", "job_check", "file_check", "file_worker", "workflow_worker", "knowledge_worker", "knowledge_check", "knowledge_lifecycle_check", "conversation_check", "checkpoint_check", "rag_check", "rag_runtime_check", "file_cloud_check", "model_check", "nova_model_check", "lambda_api", "__main__"}
+ROOT_FILES = {"deployment_worker", "agentcore_runtime", "agentcore_tools", "agentcore_execution", "main", "internal_api", "worker", "composition", "database_check", "migration_cli", "migration_pattern_check", "security_cli", "oidc_check", "oidc_spike_lambda", "identity_check", "authorization_check", "delegation_check", "job_check", "file_check", "file_worker", "workflow_worker", "knowledge_worker", "knowledge_check", "knowledge_lifecycle_check", "conversation_check", "checkpoint_check", "rag_check", "rag_runtime_check", "file_cloud_check", "model_check", "nova_model_check", "lambda_api", "__main__"}
 PUBLIC = {"service", "ports"}
 UNSAFE_NAMES = {"__import__", "__builtins__", "eval", "exec"}
 DATABASE_STDLIB = {"sqlite3", "_sqlite3", "dbm", "shelve"}
