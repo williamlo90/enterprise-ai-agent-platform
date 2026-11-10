@@ -35,7 +35,6 @@ async def execute(event, context):
         or type(epoch) is not int or not 1 <= epoch < 10**18):
         raise ValueError('Tool operation not permitted.')
     resources = build_resources(load_settings(None))
-    resources.background_refresh = False
     async with resources.lifecycle():
         claim, jobs, lease, ref, route, authoritative = await bound_job(resources, binding)
         authoritative['epoch'] = epoch
@@ -69,6 +68,7 @@ def handler(event, context):
         load_environment(os.environ['EAI_AGENTCORE_SECRET_ARN'], os.environ.get('AWS_REGION', 'ap-southeast-1'))
         with asyncio.Runner(loop_factory=database_loop_factory) as runner:
             return runner.run(execute(event, context))
-    except Exception:
+    except Exception as error:
         # Lambda platform/telemetry must not receive raw SQL, credentials, or private text.
+        print(json.dumps({'event': 'tool_held', 'error_type': type(error).__name__, 'status': getattr(error, 'status', None)}), flush=True)
         return {'status': 'held'}

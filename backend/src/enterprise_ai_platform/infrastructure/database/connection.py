@@ -21,6 +21,15 @@ class DatabaseUnavailable(RuntimeError):
         super().__init__("Database operation unavailable.")
 
 
+async def rpc_result(connection, query, parameters):
+    """Retry only the RPC's explicit rolled-back NOWAIT lock rejection."""
+    for attempt in range(3):
+        row=(await (await connection.execute(query,parameters)).fetchone())[0]
+        if not isinstance(row,dict) or row.get('status')!='unavailable' or attempt==2:
+            return row
+        await asyncio.sleep(0.2*(attempt+1))
+
+
 class DatabaseConfigurationError(ValueError):
     def __init__(self):
         super().__init__("Missing or invalid database configuration.")

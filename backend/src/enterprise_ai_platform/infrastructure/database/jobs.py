@@ -2,6 +2,7 @@
 from psycopg import sql
 from psycopg.types.json import Jsonb
 from enterprise_ai_platform.modules.jobs.ports import JobFailure
+from enterprise_ai_platform.infrastructure.database.connection import rpc_result
 
 
 class PostgresJobRepository:
@@ -9,8 +10,7 @@ class PostgresJobRepository:
         self.database, self.connection = database, connection
 
     async def _execute(self, connection, operation, payload):
-        cursor = await connection.execute(sql.SQL('SELECT {}.jobs_call(%s,%s)').format(sql.Identifier(self.database.schema)), (operation, Jsonb(payload)))
-        return (await cursor.fetchone())[0]
+        return await rpc_result(connection,sql.SQL('SELECT {}.jobs_call(%s,%s)').format(sql.Identifier(self.database.schema)), (operation, Jsonb(payload)))
 
     async def call(self, operation, payload):
         try:

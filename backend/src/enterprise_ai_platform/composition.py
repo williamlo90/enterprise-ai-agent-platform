@@ -176,7 +176,7 @@ def build_resources(settings: Settings | None = None) -> ApplicationResources:
     if settings is not None and settings.database_enabled:
         if settings.database_url is None:
             raise ConfigurationError("Missing or invalid configuration: DATABASE_URL")
-        database = RuntimeDatabase(parse_target(settings.database_url.get_secret_value()), max_size=settings.database_pool_max_size)
+        database = RuntimeDatabase(parse_target(settings.database_url.get_secret_value()), schema=settings.database_schema, max_size=settings.database_pool_max_size)
         import os
         if os.environ.get('EAI_JOURNAL_ENABLED','false') not in ('true','false'):raise ValueError('Invalid journal flag.')
         if os.environ.get('EAI_JOURNAL_ENABLED')=='true':

@@ -9,6 +9,7 @@ from enterprise_ai_platform.infrastructure.database.document_sources import Data
 from psycopg import sql
 from psycopg.types.json import Jsonb
 from enterprise_ai_platform.modules.conversations.ports import SourceSubject, SourceRef, ConversationFailure
+from enterprise_ai_platform.infrastructure.database.connection import rpc_result
 
 
 class PostgresCheckpointRepository:
@@ -20,9 +21,9 @@ class PostgresCheckpointRepository:
 
     async def execute(self, connection, operation, payload):
         if 'token' in payload:
-            result = (await (await connection.execute(sql.SQL('SELECT {}.checkpoint_owner_call(%s,%s,%s)').format(sql.Identifier(self.database.schema)), (payload['token'],operation,Jsonb({k:v for k,v in payload.items() if k!='token'})))).fetchone())[0]
+            result = await rpc_result(connection,sql.SQL('SELECT {}.checkpoint_owner_call(%s,%s,%s)').format(sql.Identifier(self.database.schema)), (payload['token'],operation,Jsonb({k:v for k,v in payload.items() if k!='token'})))
         else:
-            result = (await (await connection.execute(sql.SQL('SELECT {}.checkpoint_call(%s,%s)').format(sql.Identifier(self.database.schema)), (operation, Jsonb(payload)))).fetchone())[0]
+            result = await rpc_result(connection,sql.SQL('SELECT {}.checkpoint_call(%s,%s)').format(sql.Identifier(self.database.schema)), (operation, Jsonb(payload)))
         if not isinstance(result, dict) or result.get('status') != 'ok':
             error=ConversationFailure({'invalid':400,'missing':404,'conflict':409,'stale':409,'forbidden':403,'held':403,'unauthenticated':401,'capacity':429}.get(result.get('status') if isinstance(result,dict) else None,503))
             error.rejection_reason=result.get('reason') if isinstance(result,dict) and result.get('reason') in {'parent','checkpoint','channel_or_path','value'} else 'unspecified'

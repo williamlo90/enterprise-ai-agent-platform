@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     max_request_body_bytes: int = Field(default=1048576, ge=1, le=16777216)
     request_body_timeout_seconds: int = Field(default=10, ge=1, le=60)
     database_enabled: bool = False
+    database_schema: str = Field(default='platform', pattern=r'^(?:platform|db03_probe_[a-f0-9]{32})$')
     browser_context_enabled: bool = False
     database_pool_max_size: int = Field(default=2, ge=1, le=2)
     database_url: SecretStr | None = Field(default=None, validation_alias="DATABASE_URL", repr=False)
@@ -41,6 +42,7 @@ class Settings(BaseSettings):
     administration_enabled: bool = False
     privacy_enabled: bool = False
     files_enabled: bool = False
+    files_upload_enabled: bool = True
     receipts_enabled: bool = False
     drafts_enabled: bool = False
     actions_enabled: bool = False
@@ -110,7 +112,7 @@ class Settings(BaseSettings):
             raise ValueError('Knowledge requires authentication and database.')
         if self.organization_enabled and (not self.auth_enabled or not self.database_enabled):
             raise ValueError('Organization requires authentication and database.')
-        if self.files_enabled and (os.environ.get('AWS_LAMBDA_FUNCTION_NAME') or os.environ.get('VERCEL')=='1'):
+        if self.files_enabled and self.files_upload_enabled and (os.environ.get('AWS_LAMBDA_FUNCTION_NAME') or os.environ.get('VERCEL')=='1'):
             raise ValueError('File upload transport requires a host supporting the full byte limit.')
         if self.files_enabled and (not self.auth_enabled or not self.database_enabled or not self.files_bucket or not re.fullmatch(r'[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]',self.files_bucket)):
             raise ValueError('Private file configuration is invalid.')

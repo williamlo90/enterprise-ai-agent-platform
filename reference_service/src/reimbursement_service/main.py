@@ -30,7 +30,7 @@ from reimbursement_service.modules.claims.ports import ClaimFailure
 
 
 def create_app(settings=None, *, resource_factory=resources, operations=None, dispatch=None, recovery=None,
-               trips=None,packages=None,trip_dispatch=None,claims=None,claim_dispatch=None):
+               trips=None,packages=None,trip_dispatch=None,claims=None,claim_dispatch=None,platform_transport=None):
     settings = settings or load_settings()
     if settings.catalog_enabled and any(value is not None for value in (trips,packages,trip_dispatch)):raise ConfigurationError()
     if any(value is not None for value in (operations,dispatch,recovery)):
@@ -41,7 +41,7 @@ def create_app(settings=None, *, resource_factory=resources, operations=None, di
     if settings.claim_access_enabled and claims is not None:raise ConfigurationError()
     if settings.workflow_enabled and any(x is not None for x in (operations,dispatch,recovery)):raise ConfigurationError()
     database, health = resource_factory(settings)
-    catalog=catalog_resources(settings,database) if settings.catalog_enabled else None
+    catalog=catalog_resources(settings,database,platform_transport=platform_transport) if settings.catalog_enabled else None
     if catalog is not None:trips,packages,trip_dispatch=catalog.trips,catalog.packages,catalog.dispatch
     if settings.claim_access_enabled:
         proofs=Signer(kid=settings.terminal_key_id,private_bytes=bytes.fromhex(settings.terminal_private_hex)) if settings.workflow_enabled else Signer()

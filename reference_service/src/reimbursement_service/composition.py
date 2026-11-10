@@ -34,8 +34,9 @@ class CatalogResources:
     eligibility:PolicyEligibilityClient
 
 
-def catalog_resources(settings,database):
-    client=PlatformClient(PlatformTarget(settings.platform_origin,settings.platform_credential))
+def catalog_resources(settings,database,*,platform_transport=None):
+    target=PlatformTarget(settings.platform_origin,settings.platform_credential)
+    client=PlatformClient(target) if platform_transport is None else PlatformClient(target,transport=platform_transport)
     authority=CatalogAuthorityAdapter(client,credential_digest(settings.dispatcher_credential))
     dispatch=AccessService(client,Dispatcher('platform-dispatcher',credential_digest(settings.dispatcher_credential),frozenset({'trip.read'})))
     return CatalogResources(client,TripsService(PostgresTrips(database),authority),PackagesService(PostgresPackages(database),authority),dispatch,PolicyEligibilityClient(client))

@@ -54,9 +54,11 @@ def templates():
         allow(['bedrock:InvokeModel'], ref('ModelResourceArns')),
         allow(['bedrock:GetAccountDataRetention', 'bedrock:GetModelInvocationLoggingConfiguration'], '*'),
         allow(['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents', 'logs:DescribeLogStreams'], logs),
+        allow(['logs:PutResourcePolicy'], logs),
+        allow(['logs:DescribeLogGroups'], sub('arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*')),
         allow(['ecr:GetAuthorizationToken'], '*'),
         allow(['ecr:BatchGetImage', 'ecr:GetDownloadUrlForLayer'], sub('arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/${Prefix}-runtime')),
-        allow(['xray:PutTraceSegments', 'xray:PutTelemetryRecords'], '*'),
+        allow(['xray:PutTraceSegments', 'xray:PutTelemetryRecords', 'xray:GetSamplingRules', 'xray:GetSamplingTargets'], '*'),
         {'Effect': 'Deny', 'Action': ['bedrock-agentcore:GetWorkloadAccessTokenForUserId', 'bedrock-agentcore:InvokeAgentRuntimeForUser'], 'Resource': '*'},
     ]
     tools_log = sub('arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${Prefix}-tools:*')
@@ -78,7 +80,7 @@ def templates():
         'Tools': {'Type': 'AWS::Lambda::Function', 'DependsOn': ['ToolsLogGroup'], 'Properties': {
             'FunctionName': sub('${Prefix}-tools'), 'PackageType': 'Image', 'Architectures': ['arm64'],
             'Code': {'ImageUri': ref('ToolsImageUri')}, 'Role': attr('ToolsRole', 'Arn'),
-            'MemorySize': 512, 'Timeout': 30, 'ReservedConcurrentExecutions': 1,
+            'MemorySize': 512, 'Timeout': 30,
             'TracingConfig': {'Mode': 'Active'}, 'Environment': {'Variables': {
                 'EAI_AGENTCORE_SECRET_ARN': ref('ToolsSecretArn'), 'EAI_AGENTCORE_GATEWAY_ID': attr('Gateway', 'GatewayIdentifier')}}}},
         'Runtime': {'Type': 'AWS::BedrockAgentCore::Runtime', 'Properties': {

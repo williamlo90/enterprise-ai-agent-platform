@@ -41,7 +41,7 @@ def load_environment(secret_arn, region):
         client.close()
     if type(values) is not dict or any(
         type(k) is not str or type(v) is not str or
-        not (k.startswith(('APP_', 'OIDC_', 'REIMBURSEMENT_')) or k in {'DATABASE_URL', 'PUBLIC_ORIGIN', 'EXECUTORS_JSON'}) or
+        not (k.startswith(('APP_', 'OIDC_', 'REIMBURSEMENT_')) or k in {'DATABASE_URL', 'PUBLIC_ORIGIN', 'EXECUTORS_JSON', 'REFERENCE_CONFIG_JSON'}) or
         k in {'DATABASE_DIRECT_URL', 'REIMBURSEMENT_MIGRATION_DATABASE_URL'}
         for k, v in values.items()
     ):
@@ -171,6 +171,13 @@ class ExecutionMemory:
         for event in value.get('events', []):
             for item in event.get('payload', []):
                 record = item.get('blob')
+                if isinstance(record, str):
+                    if len(record) > 256:
+                        continue
+                    try:
+                        record = json.loads(record)
+                    except (ValueError, TypeError):
+                        continue
                 if type(record) is dict and set(record) == {'run_id', 'phase'} and record['phase'] in {'completed', 'waiting'}:
                     allowed.append(record)
         return allowed
@@ -180,18 +187,20 @@ class ExecutionMemory:
             raise ValueError('Invalid memory outcome.')
         return self.client.create_event(memoryId=self.id, actorId=self.actor, sessionId=self.session,
             eventTimestamp=datetime.now(timezone.utc), clientToken=str(uuid4()),
-            payload=[{'blob': {'run_id': self.run, 'phase': outcome}}])
+            payload=[{'blob': json.dumps({'run_id': self.run, 'phase': outcome}, separators=(',', ':'))}])
 
     def close(self):
         self.client.close()
 
 
-async def invoke_runtime(runtime_arn, region, claim, jobs, lease):
+async def invoke_runtime(runtime_arn, region, claim, jobs, lease, *, keep_session=False):
     # Identity/tenant/session come from the durable job, not the browser payload.
     reference = await jobs.reference(lease)
     if reference['job_type'] != 'agent.resume':
         raise ValueError('Agent job required.')
-    session_id = 'eai-' + hashlib.sha256((str(reference['target_id']) + ':' + str(lease.generation)).encode()).hexdigest()
+    scope = (claim['tenant_id'] + ':' + str(reference['actor_id']) + ':' + str(reference['session_id'])
+             if keep_session else str(reference['target_id']) + ':' + str(lease.generation))
+    session_id = 'eai-' + hashlib.sha256(scope.encode()).hexdigest()
     client = boto3.client('bedrock-agentcore', region_name=region, config=SDK_CONFIG)
     async def heartbeat():
         while True:
@@ -212,18 +221,24 @@ async def invoke_runtime(runtime_arn, region, claim, jobs, lease):
         if (result.get('status') != 'ok' or result.get('job_id') != claim['id']
             or result.get('generation') != claim['generation'] or result.get('state') not in {'completed', 'waiting'}):
             raise ValueError('Runtime outcome unresolved.')
-        try:
-            client.stop_runtime_session(agentRuntimeArn=runtime_arn, runtimeSessionId=session_id)
-        except Exception:
-            pass  # Idle timeout still reclaims a successfully completed session.
+        if not keep_session:
+            try:
+                client.stop_runtime_session(agentRuntimeArn=runtime_arn, runtimeSessionId=session_id)
+            except Exception:
+                pass  # Idle timeout still reclaims a successfully completed session.
         return result
     pulse = asyncio.create_task(heartbeat())
     work = asyncio.create_task(asyncio.to_thread(invoke))
     try:
         done, _ = await asyncio.wait((pulse, work), return_when=asyncio.FIRST_COMPLETED)
         if pulse in done:
-            await pulse
-            raise ValueError('Worker lease expired.')
+            # Publication completes the job before the response/session stop returns.
+            # A terminal heartbeat must not discard that already-committed result.
+            try:
+                await pulse
+            except Exception:
+                return await work
+            raise ValueError('Worker heartbeat stopped.')
         return await work
     finally:
         pulse.cancel()

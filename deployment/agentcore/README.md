@@ -1,8 +1,13 @@
 # AgentCore integration
 
+[Deployment walkthrough](DEPLOYMENT.md)
+
 The platform worker can execute its policy-answer and reimbursement-preparation jobs through
 Amazon Bedrock AgentCore Runtime. The existing LangGraph turns, PostgreSQL checkpoints,
 source-access checks, model reservations, and human-confirmation flow stay in use.
+
+Policy answers retain their source citations. Reimbursement preparation returns an editable
+draft and pauses for the user's confirmation.
 
 ```text
 Conversation / reimbursement workspace
@@ -67,6 +72,11 @@ Runtime and tools images are built from the repository root using
 [`Dockerfile.runtime`](Dockerfile.runtime) and [`Dockerfile.tools`](Dockerfile.tools).
 Both use ARM64. Deploy image digests rather than mutable tags.
 
+Runtime also supports a direct-code deployment: package the application and its ARM64
+Python dependencies into a ZIP, place it in a private S3 bucket, and select Python 3.13
+with the HTTP entry point. This path uses S3 for the deployment artifact. See the
+[AWS direct-code guide](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-code-deploy-python.html).
+
 ## Environment and rollout
 
 Use Singapore (`ap-southeast-1`) for this integration. The operator configures:
@@ -82,6 +92,15 @@ Store Runtime and tools configuration in separate Secrets Manager secrets. Each 
 a JSON object of environment-name/string-value pairs. Supported names are `APP_*`, `OIDC_*`,
 `REIMBURSEMENT_*`, `DATABASE_URL`, `PUBLIC_ORIGIN`, and `EXECUTORS_JSON`. Exclude migration/direct
 database credentials. Include only registered agent executors in the appropriate secret.
+
+Set `APP_FILES_UPLOAD_ENABLED=false` for Runtime and the tools/source Lambda. The file
+domain remains available for receipt authorization; uploads use the main application API.
+The [source adapter](source_host.py) serves the signed draft-source endpoint and connects
+the independent reimbursement service to the platform's internal verification API.
+Its `REFERENCE_CONFIG_JSON` configuration uses a separate restricted database login.
+
+Run journeys serially. Lambda reserved concurrency is optional; the templates also work
+with accounts whose regional quota cannot reserve a dedicated concurrency slot.
 
 Apply the foundation stack, populate its private configuration, build/push the images, then
 apply the services stack with the reviewed image digests and secret ARNs. Model execution is

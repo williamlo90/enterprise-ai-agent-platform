@@ -134,6 +134,24 @@
                 {
                   "Effect": "Allow",
                   "Action": [
+                    "logs:PutResourcePolicy"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/bedrock-agentcore/runtimes/${RuntimeName}*"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:DescribeLogGroups"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
                     "ecr:GetAuthorizationToken"
                   ],
                   "Resource": "*"
@@ -152,7 +170,9 @@
                   "Effect": "Allow",
                   "Action": [
                     "xray:PutTraceSegments",
-                    "xray:PutTelemetryRecords"
+                    "xray:PutTelemetryRecords",
+                    "xray:GetSamplingRules",
+                    "xray:GetSamplingTargets"
                   ],
                   "Resource": "*"
                 },
@@ -336,7 +356,6 @@
         },
         "MemorySize": 512,
         "Timeout": 30,
-        "ReservedConcurrentExecutions": 1,
         "TracingConfig": {
           "Mode": "Active"
         },

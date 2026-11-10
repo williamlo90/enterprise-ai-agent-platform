@@ -3,6 +3,7 @@ import asyncio
 from contextlib import asynccontextmanager
 import json
 import os
+import traceback
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -22,7 +23,6 @@ async def lifespan(app):
         raise ValueError('Use the configured Singapore integration.')
     load_environment(os.environ['EAI_AGENTCORE_SECRET_ARN'], region)
     resources = build_resources(load_settings(None))
-    resources.background_refresh = False
     async with resources.lifecycle():
         app.state.resources = resources
         app.state.execution = asyncio.Lock()
@@ -45,6 +45,7 @@ async def invoke(request: Request):
         if len(chunks) > 4096:
             return JSONResponse({'error': 'invalid_invocation'}, status_code=400)
     gateway = memory = None
+    stage = 'input'
     try:
         def unique(pairs):
             result = {}
@@ -59,20 +60,24 @@ async def invoke(request: Request):
         if request.app.state.execution.locked():
             return JSONResponse({'error': 'session_busy'}, status_code=409)
         async with request.app.state.execution:
+            stage = 'job_binding'
             resources = request.app.state.resources
             claim, jobs, lease, ref, route, binding = await bound_job(resources, value['claim'])
             if os.environ.get('EAI_ENABLE_MODEL_EXECUTION') != 'true' or os.environ.get('EAI_FICTIONAL_APAC_ENABLED') != 'true':
                 raise ValueError('Model execution not enabled.')
             region = os.environ.get('AWS_REGION', 'ap-southeast-1')
             gateway = Gateway(os.environ['EAI_AGENTCORE_GATEWAY_URL'], region)
+            stage = 'gateway_initialize'
             await asyncio.to_thread(gateway.initialize)
             with phase('agentcore.' + route['agent_kind']) as span:
                 span.set_attribute('eai.job_id', claim['id'])
                 if route['agent_kind'] == 'assisted':
+                    stage = 'assisted_start'
                     turn = await build_assisted_turn(resources.database, jobs, claim, source=resources.drafts.source,
                         model_factory=lambda before: build_workflow_model(before, fictional_apac=True))
                     turn.repository = GatewayRepository(turn.repository, gateway, claim, assisted=True)
                 else:
+                    stage = 'rag_start'
                     turn = await build_rag_turn(resources.database, jobs, claim,
                         model_factory=lambda before: build_model_adapters(before, fictional_apac=True))
                     turn.repository = GatewayRepository(turn.repository, gateway, claim)
@@ -84,9 +89,11 @@ async def invoke(request: Request):
                 except Exception:
                     span.set_attribute('eai.memory_read', 'unavailable')
                 if route['agent_kind'] == 'assisted':
+                    stage = 'assisted_execute'
                     result = await turn.run(build_assisted_graph, resume_input=Command(resume={'continue': True}) if route.get('resuming') else None)
                     outcome = 'waiting' if result.get('__interrupt__') else 'completed'
                 else:
+                    stage = 'rag_execute'
                     await turn.run(build_rag_graph)
                     outcome = 'completed'
                 try:
@@ -95,7 +102,16 @@ async def invoke(request: Request):
                     # A failed context write must never retry an already-committed business step.
                     span.set_attribute('eai.memory_write', 'unavailable')
                 return {'status': 'ok', 'job_id': claim['id'], 'generation': claim['generation'], 'state': outcome}
-    except Exception:
+    except Exception as error:
+        causes=[]
+        cause=error
+        for _ in range(3):
+            if cause is None:break
+            causes.append({'type':type(cause).__name__,'sqlstate':getattr(cause,'sqlstate',None)})
+            cause=cause.__context__
+        print(json.dumps({'event': 'agentcore_held', 'stage': stage, 'error_type': type(error).__name__,
+                          'status': getattr(error, 'status', None), 'causes':causes,
+                          'frames':[{'file':os.path.basename(f.filename),'line':f.lineno,'function':f.name} for f in traceback.extract_tb(error.__traceback__)[-5:]]}), flush=True)
         return JSONResponse({'error': 'execution_held'}, status_code=503)
     finally:
         if gateway:

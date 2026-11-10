@@ -39,6 +39,9 @@ The frontend uses React and TypeScript. A FastAPI backend coordinates identity, 
 conversations, drafts, and background work. PostgreSQL and pgvector hold application state
 and retrieval indexes; LangGraph checkpoints preserve assisted workflow progress.
 
+The [AgentCore integration](deployment/agentcore/README.md) runs the same workflow through
+Amazon Bedrock AgentCore Runtime, governed Gateway tools, and session-scoped Memory.
+
 A separate reimbursement service owns claim state, business rules, approval stages, and
 operation receipts. Model adapters provide assistance within application-controlled permissions.
 

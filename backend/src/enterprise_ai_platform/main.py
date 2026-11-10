@@ -70,7 +70,7 @@ def build_app(settings: Settings, *, services: ApplicationServices | None = None
         app.include_router(knowledge_router)
     if not internal and app.state.services.organization is not None:
         app.include_router(organization_router)
-    if not internal and app.state.services.files is not None:
+    if not internal and settings.files_upload_enabled and app.state.services.files is not None:
         app.include_router(files_router)
     if not internal and app.state.services.administration is not None:app.include_router(administration_router)
     if not internal and app.state.services.privacy_policy is not None:app.include_router(privacy_router)

@@ -22,7 +22,7 @@ class NovaWorkflowPlanner:
         # Conservative UTF-8 bound fits the reserved input-token ceiling.
         if len((SYSTEM+text+json.dumps(TOOLS)).encode())>3500:raise ModelFailure('invalid_input')
         self.before_call('chat',4096)
-        response=sdk_call(self.client.converse,modelId=NOVA_PROFILE,system=[{'text':SYSTEM}],messages=[{'role':'user','content':[{'text':text}]}],inferenceConfig={'maxTokens':256,'temperature':0},toolConfig={'tools':TOOLS,'toolChoice':{'auto':{}}})
+        response=sdk_call(self.client.converse,modelId=NOVA_PROFILE,system=[{'text':SYSTEM}],messages=[{'role':'user','content':[{'text':text}]}],inferenceConfig={'maxTokens':256,'temperature':0},toolConfig={'tools':TOOLS,'toolChoice':{'any':{}}})
         try:
             raw=response['usage'];i=count(raw['inputTokens'],1000000);o=count(raw['outputTokens'],1000000)
             if raw.get('totalTokens',i+o)!=i+o or any(raw.get(k,0) for k in ('cacheReadInputTokens','cacheWriteInputTokens')):raise ValueError
